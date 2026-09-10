@@ -1,0 +1,22 @@
+[package]
+name = "tcm-library-desktop"
+version.workspace = true
+edition.workspace = true
+authors.workspace = true
+license.workspace = true
+repository.workspace = true
+description = "Tauri v2 desktop client for TCM-Library-Search"
+
+[lib]
+name = "tcm_library_desktop_lib"
+crate-type = ["staticlib", "cdylib", "rlib"]
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+tauri = { version = "2", features = [] }
+serde = { workspace = true }
+serde_json = { workspace = true }
+base64 = { workspace = true }
+tcm_library_core = { path = "../../core" }
