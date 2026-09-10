@@ -4,8 +4,10 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    check_herb_compatibility, diff_texts, BookSummaryItem, CategoryTreeItem, CompatibilityAlert,
-    CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail, TextDiffResult,
+    check_herb_compatibility, diff_texts, find_acupoint, get_meridian_knowledge_base,
+    recommend_acupoints_for_symptom, AcupointInfo, BookSummaryItem, CategoryTreeItem,
+    CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery, SearchResultItem, TcmEntryDetail,
+    TextDiffResult,
 };
 
 /// 健康检查
@@ -124,6 +126,24 @@ fn diff_text_versions(text_a: String, text_b: String) -> TextDiffResult {
     diff_texts(&text_a, &text_b)
 }
 
+/// 获取全量十四经脉与重点穴位知识库
+#[tauri::command]
+fn list_meridians() -> Vec<MeridianInfo> {
+    get_meridian_knowledge_base()
+}
+
+/// 穴位临床速查与定位辨析
+#[tauri::command]
+fn get_acupoint_detail(name: String) -> Option<AcupointInfo> {
+    find_acupoint(&name)
+}
+
+/// 依据临床病症智能推荐对偶配穴处方
+#[tauri::command]
+fn recommend_acupoints(symptom: String) -> Vec<AcupointInfo> {
+    recommend_acupoints_for_symptom(&symptom)
+}
+
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     if let Ok(resource_dir) = app.path().resource_dir() {
         let bundled = resource_dir.join("corpus");
@@ -174,6 +194,9 @@ pub fn run() {
             load_image_data_uri,
             check_compatibility,
             diff_text_versions,
+            list_meridians,
+            get_acupoint_detail,
+            recommend_acupoints,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
