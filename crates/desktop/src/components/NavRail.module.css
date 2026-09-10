@@ -1,0 +1,78 @@
+.navRail {
+  display: flex;
+  flex-direction: column;
+  width: 56px;
+  height: 100%;
+  background-color: var(--nav-bg, #2c2420);
+  color: var(--nav-text, #a89e94);
+  padding: 12px 4px;
+  box-sizing: border-box;
+  align-items: center;
+  gap: 12px;
+  flex-shrink: 0;
+  z-index: 50;
+  border-right: 1px solid rgba(0, 0, 0, 0.15);
+}
+
+.brand {
+  font-size: 24px;
+  margin-bottom: 4px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  user-select: none;
+}
+
+.navGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  width: 100%;
+}
+
+.spacer {
+  flex: 1;
+}
+
+.navButton {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  width: 46px;
+  height: 46px;
+  border-radius: 8px;
+  background: transparent;
+  border: none;
+  color: var(--nav-text, #a89e94);
+  cursor: pointer;
+  padding: 2px 0;
+  transition: all 0.2s ease;
+  margin: 0 auto;
+}
+
+.navButton:hover {
+  background-color: rgba(255, 255, 255, 0.08);
+  color: var(--nav-active, #e8ddd0);
+}
+
+.navButton.active {
+  background-color: var(--nav-icon-active-bg, rgba(184, 59, 38, 0.2));
+  color: var(--nav-active, #e8ddd0);
+}
+
+.icon {
+  width: 20px;
+  height: 20px;
+  margin-bottom: 2px;
+  stroke: currentColor;
+  stroke-width: 2;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  fill: none;
+}
+
+.label {
+  font-size: 0.62rem;
+  line-height: 1;
+}

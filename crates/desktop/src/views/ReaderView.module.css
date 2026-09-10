@@ -1,0 +1,295 @@
+/* 整体三栏布局容器 (NavRail + MiddlePanel + ReaderPane) */
+.layoutContainer {
+  display: flex;
+  flex-direction: row;
+  height: 100%;
+  width: 100%;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+/* 中间面板容器 (Search / Library / Home / Bookmark / Settings) */
+.middlePanelWrapper {
+  width: 340px;
+  min-width: 300px;
+  max-width: 400px;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border-default);
+  box-shadow: var(--shadow-sm);
+  flex-shrink: 0;
+}
+
+/* 右侧阅读器工作区 */
+.readerPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  background-color: var(--bg-app);
+}
+
+.readerHeader {
+  padding: 12px 24px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-default);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  box-shadow: var(--shadow-sm);
+  min-height: 52px;
+  gap: 16px;
+}
+
+.headerMain {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+
+.headerTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  margin: 0;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerSub {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  display: flex;
+  gap: 10px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.versionBadge {
+  font-size: 0.72rem;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  background: var(--accent-jade-soft);
+  color: var(--accent-jade);
+  border: 1px solid rgba(74, 112, 101, 0.25);
+  white-space: nowrap;
+}
+
+/* 阅读层开关按钮与收藏按钮 */
+.layerToggles {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.layerToggleBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  user-select: none;
+}
+
+.layerToggleBtn:hover {
+  border-color: var(--accent-cinnabar);
+  color: var(--text-primary);
+}
+
+.layerToggleBtnActive {
+  background: var(--accent-cinnabar-soft);
+  color: var(--accent-cinnabar);
+  border-color: var(--accent-cinnabar);
+  font-weight: 600;
+}
+
+.bookmarkBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+  color: var(--text-muted);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.bookmarkBtn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.bookmarkBtnActive {
+  background: var(--accent-gold-soft);
+  color: var(--accent-gold);
+  border-color: var(--accent-gold);
+}
+
+.readerScroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: 28px 36px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+  max-width: 920px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+/* 原文卡片 */
+.originalCard {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 22px 26px;
+  box-shadow: var(--shadow-sm);
+  position: relative;
+}
+
+.cardSectionTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.82rem;
+  font-weight: 700;
+  margin-bottom: 14px;
+  color: var(--accent-cinnabar);
+  border-bottom: 2px solid var(--accent-cinnabar);
+  padding-bottom: 3px;
+  letter-spacing: 0.08em;
+}
+
+.originalText {
+  font-family: var(--font-reader);
+  font-size: var(--reader-font-size);
+  line-height: var(--reader-line-height);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+  letter-spacing: 0.02em;
+}
+
+/* 插图图谱区域 */
+.imageSection {
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  padding: 18px 22px;
+}
+
+.imageGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.imageThumbBox {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  background: var(--bg-subtle);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+}
+
+.imageThumbBox:hover {
+  border-color: var(--accent-cinnabar);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-md);
+}
+
+.imageThumb {
+  width: 100%;
+  height: 160px;
+  object-fit: cover;
+  background-color: var(--bg-subtle);
+}
+
+.imageCaption {
+  padding: 8px 10px;
+  font-size: 0.78rem;
+  color: var(--text-secondary);
+  text-align: center;
+  background: var(--bg-surface);
+}
+
+/* 古注卡片 */
+.commentaryCard {
+  border-left: 4px solid var(--accent-gold);
+  background: var(--accent-gold-soft);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  padding: 18px 22px;
+}
+
+.commentaryTag {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-gold);
+  margin-bottom: 10px;
+}
+
+.commentaryText {
+  font-size: calc(var(--reader-font-size) * 0.94);
+  line-height: calc(var(--reader-line-height) * 0.92);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* 白话提要卡片 */
+.summaryCard {
+  border-left: 4px solid var(--accent-jade);
+  background: var(--accent-jade-soft);
+  border-radius: 0 var(--radius-lg) var(--radius-lg) 0;
+  padding: 18px 22px;
+}
+
+.summaryTag {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: var(--accent-jade);
+  margin-bottom: 10px;
+}
+
+.summaryText {
+  font-size: calc(var(--reader-font-size) * 0.94);
+  line-height: calc(var(--reader-line-height) * 0.92);
+  color: var(--text-primary);
+  white-space: pre-wrap;
+}
+
+/* 空白占位 */
+.emptyView {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  color: var(--text-muted);
+  padding: 40px;
+  text-align: center;
+}
+
+.emptyIcon {
+  font-size: 3.2rem;
+}
