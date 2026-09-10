@@ -1,0 +1,166 @@
+:root {
+  /* 基础通用 */
+  --font-sans: -apple-system, BlinkMacSystemFont, "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  --font-serif: "Songti SC", "SimSun", "Noto Serif SC", serif;
+  --font-kaiti: "Kaiti SC", "STKaiti", "KaiTi", "楷体", serif;
+  --font-fangsong: "FangSong", "FangSong_GB2312", "STFangsong", serif;
+
+  --radius-sm: 4px;
+  --radius-md: 6px;
+  --radius-lg: 10px;
+  --radius-xl: 14px;
+}
+
+/* 仿古宣纸浅色主题 (Rice Paper) */
+:root[data-theme="rice-paper"],
+:root:not([data-theme]) {
+  --bg-app: #f4efe6;
+  --bg-surface: #fbf8f1;
+  --bg-card: #ffffff;
+  --bg-subtle: #f5f0e6;
+  --bg-input: #ffffff;
+  --bg-hover: #ede6d8;
+  --bg-active: #e4dccc;
+
+  --border-subtle: #eae3d5;
+  --border-default: #ddd3c1;
+  --border-focus: #b83b26;
+
+  --text-primary: #29221b;
+  --text-secondary: #5c5247;
+  --text-muted: #8c7f72;
+  --text-disabled: #b5aba0;
+
+  --accent-cinnabar: #b83b26;      /* 朱砂红 */
+  --accent-cinnabar-soft: rgba(184, 59, 38, 0.1);
+  --accent-gold: #c18c2f;          /* 泥金 */
+  --accent-gold-soft: rgba(193, 140, 47, 0.12);
+  --accent-jade: #4a7065;          /* 黛绿 */
+  --accent-jade-soft: rgba(74, 112, 101, 0.12);
+  --accent-cyan: #357a8a;          /* 靛青 */
+
+  --shadow-sm: 0 1px 3px rgba(41, 34, 27, 0.05);
+  --shadow-md: 0 4px 12px rgba(41, 34, 27, 0.08);
+  --shadow-lg: 0 8px 24px rgba(41, 34, 27, 0.12);
+
+  /* 导航栏 (Nav Rail) */
+  --nav-bg: #2c2420;
+  --nav-text: #a89e94;
+  --nav-active: #e8ddd0;
+  --nav-icon-active-bg: rgba(184, 59, 38, 0.2);
+}
+
+/* 暮墨玄竹深色主题 (Dark Bamboo) */
+:root[data-theme="dark-bamboo"] {
+  --bg-app: #121517;
+  --bg-surface: #181c1f;
+  --bg-card: #1f2429;
+  --bg-subtle: #252b31;
+  --bg-input: #1b2024;
+  --bg-hover: #2c343b;
+  --bg-active: #353f47;
+
+  --border-subtle: #262c32;
+  --border-default: #343c44;
+  --border-focus: #d4634f;
+
+  --text-primary: #e9e6df;
+  --text-secondary: #bab4a8;
+  --text-muted: #888277;
+  --text-disabled: #59554d;
+
+  --accent-cinnabar: #e0533d;      /* 暮赤红 */
+  --accent-cinnabar-soft: rgba(224, 83, 61, 0.16);
+  --accent-gold: #e2a63b;          /* 澄金 */
+  --accent-gold-soft: rgba(226, 166, 59, 0.16);
+  --accent-jade: #5c8b7e;          /* 墨玉竹 */
+  --accent-jade-soft: rgba(92, 139, 126, 0.16);
+  --accent-cyan: #4ea8bc;
+
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3);
+  --shadow-md: 0 4px 12px rgba(0, 0, 0, 0.4);
+  --shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.5);
+
+  /* 导航栏 (Nav Rail) */
+  --nav-bg: #0d0f11;
+  --nav-text: #6b6560;
+  --nav-active: #d4cec4;
+  --nav-icon-active-bg: rgba(224, 83, 61, 0.2);
+}
+
+/* 字体与字号变量 */
+:root[data-font="kaiti"] {
+  --font-reader: var(--font-kaiti);
+}
+:root[data-font="songti"] {
+  --font-reader: var(--font-serif);
+}
+:root[data-font="sans"] {
+  --font-reader: var(--font-sans);
+}
+:root[data-font="fangsong"] {
+  --font-reader: var(--font-fangsong);
+}
+
+:root[data-fontsize="small"] {
+  --reader-font-size: 1.0rem;
+  --reader-line-height: 1.8;
+}
+:root[data-fontsize="medium"] {
+  --reader-font-size: 1.15rem;
+  --reader-line-height: 1.95;
+}
+:root[data-fontsize="large"] {
+  --reader-font-size: 1.3rem;
+  --reader-line-height: 2.1;
+}
+:root[data-fontsize="xlarge"] {
+  --reader-font-size: 1.5rem;
+  --reader-line-height: 2.2;
+}
+:root[data-fontsize="xxlarge"] {
+  --reader-font-size: 1.7rem;
+  --reader-line-height: 2.3;
+}
+
+/* 行间距覆盖 */
+:root[data-lineheight="compact"] {
+  --reader-line-height: 1.6;
+}
+:root[data-lineheight="comfortable"] {
+  /* uses default per fontsize */
+}
+:root[data-lineheight="loose"] {
+  --reader-line-height: 2.4;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  padding: 0;
+  font-family: var(--font-sans);
+  background-color: var(--bg-app);
+  color: var(--text-primary);
+  user-select: none;
+  -webkit-font-smoothing: antialiased;
+  overflow: hidden;
+}
+
+/* 自定义滚动条 */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: var(--border-default);
+  border-radius: 3px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
+}
