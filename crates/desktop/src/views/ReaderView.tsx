@@ -34,6 +34,16 @@ import { LibraryPanel, BookInfo } from "../components/LibraryPanel";
 import { HomePanel } from "../components/HomePanel";
 import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
+import {
+  BookmarkItem,
+  RecentEntryItem,
+  loadBookmarks,
+  loadRecentEntries,
+  pushRecentEntry,
+  removeBookmark,
+  setBookmark,
+  updateBookmarkNote,
+} from "../services/storage";
 import styles from "./ReaderView.module.css";
 
 interface ReaderViewProps {
@@ -58,11 +68,9 @@ export default function ReaderView(props: ReaderViewProps) {
   const [showCommentary, setShowCommentary] = createSignal<boolean>(true);
   const [showSummary, setShowSummary] = createSignal<boolean>(true);
 
-  // 收藏与历史记录
-  const [bookmarks, setBookmarks] = createSignal<Array<{ id: string; title: string; book: string }>>([]);
-  const [recentEntries, setRecentEntries] = createSignal<
-    Array<{ id: string; title: string; book: string; subcategory: string }>
-  >([]);
+  // 收藏与历史记录（带本地持久化）
+  const [bookmarks, setBookmarks] = createSignal<BookmarkItem[]>(loadBookmarks());
+  const [recentEntries, setRecentEntries] = createSignal<RecentEntryItem[]>(loadRecentEntries());
 
   // 图书馆书目数据（基于典籍体系）
   const [books, setBooks] = createSignal<BookInfo[]>([
@@ -232,19 +240,14 @@ export default function ReaderView(props: ReaderViewProps) {
       const detail = await getEntryDetail(id);
       setActiveEntry(detail);
 
-      // 更新最近查阅列表（去重保留前 10 个）
-      setRecentEntries((prev) => {
-        const filtered = prev.filter((e) => e.id !== id);
-        return [
-          {
-            id,
-            title: detail.metadata.section_title,
-            book: detail.metadata.book,
-            subcategory: detail.metadata.chapter || detail.metadata.type,
-          },
-          ...filtered,
-        ].slice(0, 10);
-      });
+      // 更新并持久化最近查阅列表
+      const updatedRecent = pushRecentEntry(
+        id,
+        detail.metadata.section_title,
+        detail.metadata.book,
+        detail.metadata.chapter || detail.metadata.type
+      );
+      setRecentEntries(updatedRecent);
 
       // 加载条目插图
       if (detail.images && detail.images.length > 0) {
@@ -267,26 +270,33 @@ export default function ReaderView(props: ReaderViewProps) {
     }
   };
 
-  // 收藏切换
+  // 收藏切换（带本地持久化）
   const toggleBookmark = () => {
     const cur = activeEntry();
     if (!cur) return;
     const id = cur.metadata.id;
-    setBookmarks((prev) => {
-      const exists = prev.some((b) => b.id === id);
-      if (exists) {
-        return prev.filter((b) => b.id !== id);
-      } else {
-        return [
-          ...prev,
-          {
-            id,
-            title: cur.metadata.section_title,
-            book: cur.metadata.book,
-          },
-        ];
-      }
-    });
+    if (isBookmarked()) {
+      const updated = removeBookmark(id);
+      setBookmarks(updated);
+    } else {
+      const updated = setBookmark(
+        id,
+        cur.metadata.section_title,
+        cur.metadata.book,
+        cur.metadata.chapter
+      );
+      setBookmarks(updated);
+    }
+  };
+
+  const handleRemoveBookmark = (id: string) => {
+    const updated = removeBookmark(id);
+    setBookmarks(updated);
+  };
+
+  const handleUpdateBookmarkNote = (id: string, note: string) => {
+    const updated = updateBookmarkNote(id, note);
+    setBookmarks(updated);
   };
 
   const isBookmarked = () => {
@@ -378,6 +388,8 @@ export default function ReaderView(props: ReaderViewProps) {
               selectEntry(id);
               setActiveNav("search");
             }}
+            onRemoveBookmark={handleRemoveBookmark}
+            onUpdateNote={handleUpdateBookmarkNote}
           />
         </Show>
 
