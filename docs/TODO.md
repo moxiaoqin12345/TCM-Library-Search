@@ -58,7 +58,9 @@ Phase 5: 混合搜索优化与跨平台发布
 - [x] 本地书签与高亮批注持久化（LocalStorage 存储用户标注、随记心得与阅读历史）
 - [x] 自动化 CI 工作流（GitHub Actions：cargo fmt, clippy, test 与 pnpm build）
 - [x] 初始代码提交与 Git 仓库规范化小粒度 Commit 归档
-- [ ] 本地开发运行与打包验证（Tauri Dev 运行调试、本地 Release 构建）
-- [ ] 典籍正文全文高亮检索（在原文中高亮当前搜索的关键词与症状）
-- [ ] 正文双击/划词词典释义弹窗（中医药专业术语速查）
-- [ ] 跨平台发布工作流（配置 Release 自动生成 Windows `.msi`/`.exe` 与 macOS 产物）
+- [x] 典籍正文全文高亮检索（在原文中高亮当前搜索的关键词与临床症状定位）
+- [x] 正文双击/划词词典释义弹窗（中医药专业术语速查与跨书目关联推导）
+- [ ] 本地开发运行与打包验证（Tauri Dev 运行调试、本地打包生成安装包）
+- [ ] 导出与备份（支持将研读心得、书签与古籍条目导出为 Markdown 或 JSON）
+- [ ] 跨平台发布工作流（GitHub Actions Release 自动构建 Windows `.msi`/`.exe`、macOS `.dmg`）
+
