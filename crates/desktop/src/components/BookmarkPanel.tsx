@@ -1,5 +1,6 @@
 import { Component, For, Show, createSignal } from 'solid-js';
 import { BookmarkItem } from '../services/storage';
+import { exportAllBookmarksToMarkdown } from '../services/export';
 import styles from './BookmarkPanel.module.css';
 
 export interface BookmarkPanelProps {
@@ -46,7 +47,19 @@ export const BookmarkPanel: Component<BookmarkPanelProps> = (props) => {
     <div class={styles.container}>
       <div class={styles.header}>
         <h2 class={styles.title}>我的收藏与研读心得</h2>
-        <span class={styles.badge}>{props.bookmarks.length} 篇</span>
+        <div class={styles.headerActions}>
+          <Show when={props.bookmarks.length > 0}>
+            <button
+              type="button"
+              class={styles.exportBtn}
+              onClick={() => exportAllBookmarksToMarkdown(props.bookmarks)}
+              title="将所有收藏篇目与心得导出为 Markdown 集锦"
+            >
+              📥 导出集锦
+            </button>
+          </Show>
+          <span class={styles.badge}>{props.bookmarks.length} 篇</span>
+        </div>
       </div>
 
       <div class={styles.content}>

@@ -36,6 +36,7 @@ import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { TermPopover } from "../components/TermPopover";
 import { highlightTcmKeywords } from "../utils/highlighter";
+import { exportEntryToMarkdown } from "../services/export";
 import {
   BookmarkItem,
   RecentEntryItem,
@@ -532,6 +533,22 @@ export default function ReaderView(props: ReaderViewProps) {
                   💬 白话
                 </button>
               </div>
+
+              {/* 导出当前条目 */}
+              <button
+                type="button"
+                class={styles.exportEntryBtn}
+                onClick={() => {
+                  const cur = activeEntry();
+                  if (cur) {
+                    const bm = bookmarks().find((b) => b.id === cur.metadata.id);
+                    exportEntryToMarkdown(cur, bm?.note);
+                  }
+                }}
+                title="将本篇典籍（含三层正文与研读随记）导出为 Markdown 文档"
+              >
+                📥 导出
+              </button>
 
               {/* 收藏按钮 */}
               <button

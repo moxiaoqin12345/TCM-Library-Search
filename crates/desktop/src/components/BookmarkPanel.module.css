@@ -22,6 +22,31 @@
   margin: 0;
 }
 
+.headerActions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.exportBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 8px;
+  font-size: 0.72rem;
+  color: var(--accent-jade);
+  background-color: var(--accent-jade-soft);
+  border: 1px solid rgba(74, 112, 101, 0.25);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.exportBtn:hover {
+  background-color: var(--accent-jade);
+  color: #fff;
+}
+
 .badge {
   font-size: 0.72rem;
   padding: 2px 7px;

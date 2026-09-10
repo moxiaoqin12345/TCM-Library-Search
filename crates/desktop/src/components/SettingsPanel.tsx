@@ -1,4 +1,5 @@
 import { Component } from 'solid-js';
+import { exportBackupJSON, importBackupJSON } from '../services/export';
 import styles from './SettingsPanel.module.css';
 import type { AppTheme, FontFamily, FontSize } from '../theme/theme';
 
@@ -113,6 +114,45 @@ export const SettingsPanel: Component<SettingsPanelProps> = (props) => {
               />
               白话
             </label>
+          </div>
+        </div>
+
+        {/* 研读数据备份与迁移 */}
+        <div class={styles.backupSection}>
+          <div class={styles.settingLabel}>研读数据备份与迁移</div>
+          <div class={styles.backupActions}>
+            <button
+              type="button"
+              class={styles.backupBtn}
+              onClick={() => exportBackupJSON()}
+              title="将所有书签与研读心得导出为本地 JSON 文件"
+            >
+              📤 备份全部心得 (JSON)
+            </button>
+
+            <label class={styles.backupBtn} style={{ cursor: "pointer" }}>
+              📥 导入恢复心得 (JSON)
+              <input
+                type="file"
+                accept=".json,application/json"
+                style={{ display: "none" }}
+                onChange={async (e) => {
+                  const files = e.currentTarget.files;
+                  if (files && files[0]) {
+                    const res = await importBackupJSON(files[0]);
+                    if (res.success) {
+                      alert(`成功恢复 ${res.count} 条收藏与研读心得！`);
+                      window.location.reload();
+                    } else {
+                      alert(`导入失败：${res.error}`);
+                    }
+                  }
+                }}
+              />
+            </label>
+          </div>
+          <div class={styles.backupTip}>
+            提示：备份文件包含您标注的所有条目及随记临床心得，支持在不同设备间无损迁移。
           </div>
         </div>
       </div>
