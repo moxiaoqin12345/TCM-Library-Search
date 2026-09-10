@@ -1,0 +1,210 @@
+.radarContainer {
+  margin-bottom: 1.25rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  transition: all 0.25s ease;
+  font-family: inherit;
+}
+
+.radarSevere {
+  border: 1px solid rgba(184, 59, 38, 0.45);
+  background: rgba(184, 59, 38, 0.05);
+  box-shadow: 0 2px 10px rgba(184, 59, 38, 0.08);
+}
+
+.radarWarning {
+  border: 1px solid rgba(181, 110, 39, 0.4);
+  background: rgba(181, 110, 39, 0.05);
+  box-shadow: 0 2px 10px rgba(181, 110, 39, 0.06);
+}
+
+.radarHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.65rem 1rem;
+  cursor: pointer;
+  user-select: none;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.radarSevere .radarHeader {
+  background: rgba(184, 59, 38, 0.12);
+}
+
+.radarWarning .radarHeader {
+  background: rgba(181, 110, 39, 0.1);
+}
+
+.radarTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.radarPulseIcon {
+  font-size: 1.1rem;
+  animation: pulse 1.5s infinite ease-in-out;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 0.85;
+  }
+  50% {
+    transform: scale(1.15);
+    opacity: 1;
+  }
+}
+
+.radarTitle {
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.05em;
+  color: var(--text-primary);
+}
+
+.alertCounter {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  margin-left: 0.25rem;
+}
+
+.severeTag {
+  color: #b83b26;
+  font-weight: 600;
+}
+
+.warningTag {
+  color: #b56e27;
+  font-weight: 600;
+}
+
+.headerRight {
+  display: flex;
+  align-items: center;
+}
+
+.expandToggleText {
+  font-size: 0.75rem;
+  color: var(--text-muted);
+  transition: color 0.2s ease;
+}
+
+.radarHeader:hover .expandToggleText {
+  color: var(--text-primary);
+}
+
+.radarBody {
+  padding: 0.85rem 1rem;
+}
+
+.alertGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem;
+}
+
+.alertCard {
+  background: var(--bg-card);
+  border-radius: var(--radius-sm);
+  padding: 0.75rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.alertCard:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.07);
+}
+
+.cardSevere {
+  border-left: 4px solid #b83b26;
+}
+
+.cardWarning {
+  border-left: 4px solid #b56e27;
+}
+
+.cardTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.typeBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.45rem;
+  border-radius: 4px;
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  border: 1px solid var(--border-subtle);
+}
+
+.severityBadge {
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.1rem 0.4rem;
+  border-radius: 4px;
+}
+
+.cardSevere .severityBadge {
+  color: #fff;
+  background: #b83b26;
+}
+
+.cardWarning .severityBadge {
+  color: #fff;
+  background: #b56e27;
+}
+
+.herbPair {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  font-size: 0.95rem;
+}
+
+.herbChip {
+  padding: 0.2rem 0.5rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  color: var(--text-primary);
+}
+
+.herbChip:hover {
+  border-color: #b83b26;
+  color: #b83b26;
+  background: rgba(184, 59, 38, 0.05);
+}
+
+.pairDivider {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.rhymeQuote {
+  font-size: 0.8rem;
+  font-weight: 500;
+  color: var(--accent-cinnabar, #b83b26);
+  background: rgba(184, 59, 38, 0.04);
+  padding: 0.3rem 0.5rem;
+  border-radius: 4px;
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+  border: 1px dashed rgba(184, 59, 38, 0.2);
+}
+
+.explanationText {
+  font-size: 0.8rem;
+  line-height: 1.45;
+  color: var(--text-secondary);
+}

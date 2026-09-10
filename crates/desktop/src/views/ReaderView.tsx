@@ -7,6 +7,8 @@ import {
 import {
   BookSummaryItem,
   CategoryTreeItem,
+  checkHerbCompatibility,
+  CompatibilityAlert,
   getBookChapters,
   getEntryDetail,
   listBooks,
@@ -35,6 +37,7 @@ import { HomePanel } from "../components/HomePanel";
 import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { TermPopover } from "../components/TermPopover";
+import { CompatibilityRadar } from "../components/CompatibilityRadar";
 import { highlightTcmKeywords } from "../utils/highlighter";
 import { exportEntryToMarkdown } from "../services/export";
 import {
@@ -143,6 +146,9 @@ export default function ReaderView(props: ReaderViewProps) {
     title: string;
     caption?: string;
   } | null>(null);
+
+  // 配伍禁忌实时雷达检测告警状态
+  const [compatibilityAlerts, setCompatibilityAlerts] = createSignal<CompatibilityAlert[]>([]);
 
   // 综合计算当前条目的所有临床聚焦词（用于正文自动高亮与定位）
   const activeHighlightKeywords = () => {
@@ -314,6 +320,27 @@ export default function ReaderView(props: ReaderViewProps) {
               .catch(() => {});
           }
         }
+      }
+
+      // 触发配伍禁忌实时碰撞雷达分析（搜集药名维度及方药名）
+      const herbsToCheck: string[] = [];
+      if (detail.metadata.conditions.yaoming) {
+        herbsToCheck.push(...detail.metadata.conditions.yaoming);
+      }
+      // 提取标题中的药材/方剂主要成分
+      if (detail.metadata.section_title) {
+        herbsToCheck.push(detail.metadata.section_title);
+      }
+      if (herbsToCheck.length > 0) {
+        try {
+          const alerts = await checkHerbCompatibility(herbsToCheck);
+          setCompatibilityAlerts(alerts);
+        } catch (e) {
+          console.warn("Herb compatibility check failed:", e);
+          setCompatibilityAlerts([]);
+        }
+      } else {
+        setCompatibilityAlerts([]);
       }
     } catch (err) {
       console.error("Failed to load detail:", err);
@@ -571,6 +598,15 @@ export default function ReaderView(props: ReaderViewProps) {
                 ⏳ 正在载入典籍正文与名家阐微...
               </div>
             </Show>
+
+            {/* 配伍禁忌实时雷达预警卡 */}
+            <CompatibilityRadar
+              alerts={compatibilityAlerts()}
+              onHerbClick={(herb) => {
+                doSearch(herb, undefined, undefined);
+                setActiveNav("search");
+              }}
+            />
 
             {/* 1. 原文卡片 */}
             <Show when={showOriginal()}>

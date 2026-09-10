@@ -177,3 +177,26 @@ export async function resolveImagePath(id: string, relativePath: string): Promis
 export async function loadImageDataUri(id: string, relativePath: string): Promise<string> {
   return invoke("load_image_data_uri", { id, relativePath });
 }
+
+export type IncompatibilitySeverity = "severe" | "warning" | "info";
+
+export type IncompatibilityType =
+  | "shiba_fan"
+  | "shijiu_wei"
+  | "renshen_jinji"
+  | "xiang_e";
+
+export interface CompatibilityAlert {
+  herb_a: string;
+  herb_b?: string | null;
+  incompatibility_type: IncompatibilityType;
+  severity: IncompatibilitySeverity;
+  source_rhyme: string;
+  explanation: string;
+}
+
+export async function checkHerbCompatibility(
+  herbs: string[]
+): Promise<CompatibilityAlert[]> {
+  return invoke("check_compatibility", { herbs });
+}
