@@ -4,6 +4,7 @@
 //! for Traditional Chinese Medicine (TCM) classical and modern texts.
 
 pub mod compatibility;
+pub mod diff;
 pub mod error;
 pub mod index;
 pub mod matcher;
@@ -14,6 +15,7 @@ pub mod parser;
 pub use compatibility::{
     check_herb_compatibility, CompatibilityAlert, IncompatibilitySeverity, IncompatibilityType,
 };
+pub use diff::{diff_texts, DiffChunk, DiffOp, TextDiffResult};
 pub use error::{CoreError, Result};
 pub use index::{locate_manifest_path, CorpusIndex};
 pub use matcher::search_corpus;
