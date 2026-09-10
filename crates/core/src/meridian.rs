@@ -481,7 +481,11 @@ pub fn recommend_acupoints_for_symptom(symptom: &str) -> Vec<AcupointInfo> {
 
     for meridian in get_meridian_knowledge_base() {
         for point in meridian.acupoints {
-            if point.indications.iter().any(|ind| ind.contains(clean) || clean.contains(ind)) {
+            if point
+                .indications
+                .iter()
+                .any(|ind| ind.contains(clean) || clean.contains(ind))
+            {
                 hits.push(point);
             }
         }
