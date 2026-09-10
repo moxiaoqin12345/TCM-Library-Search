@@ -204,3 +204,31 @@ pub struct CorpusStatus {
     pub is_ready: bool,
     pub root_path: String,
 }
+
+/// 书籍章节条目项
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BookChapterEntryItem {
+    pub id: String,
+    pub title: String,
+    pub section_title: String,
+    pub weight: u32,
+    pub category: String,
+    pub subcategory: String,
+}
+
+/// 书籍章节项
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BookChapterTreeItem {
+    pub chapter_name: String,
+    pub count: usize,
+    pub entries: Vec<BookChapterEntryItem>,
+}
+
+/// 书目概览项
+#[derive(Debug, Clone, PartialEq, Eq, Serialize, Deserialize)]
+pub struct BookSummaryItem {
+    pub book_name: String,
+    pub entry_count: usize,
+    pub chapter_count: usize,
+    pub chapters: Vec<BookChapterTreeItem>,
+}

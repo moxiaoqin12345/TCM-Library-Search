@@ -1,6 +1,7 @@
 use crate::error::{CoreError, Result};
 use crate::models::{
-    CategoryTreeItem, CorpusManifest, ManifestCategory, ManifestEntry, SubcategoryTreeItem,
+    BookChapterEntryItem, BookChapterTreeItem, BookSummaryItem, CategoryTreeItem, CorpusManifest,
+    ManifestCategory, ManifestEntry, SubcategoryTreeItem,
 };
 use std::collections::HashMap;
 use std::fs;
@@ -96,6 +97,91 @@ impl CorpusIndex {
 
         tree
     }
+
+    /// 获取所有典籍书目及其卷次篇章树
+    pub fn list_books(&self) -> Vec<BookSummaryItem> {
+        type ChapterEntriesMap = HashMap<String, Vec<BookChapterEntryItem>>;
+        type BookChapterData = (Vec<String>, ChapterEntriesMap);
+
+        // 维持稳定的书目顺序
+        let mut book_order = Vec::new();
+        // book -> (chapter_order, chapters)
+        let mut book_map: HashMap<String, BookChapterData> = HashMap::new();
+
+        for entry in &self.entries {
+            let book = if entry.book.is_empty() {
+                "其他典籍".to_string()
+            } else {
+                entry.book.clone()
+            };
+
+            let chapter = if entry.chapter.is_empty() {
+                "未分卷".to_string()
+            } else {
+                entry.chapter.clone()
+            };
+
+            let (chapter_order, chapters) = book_map.entry(book.clone()).or_insert_with(|| {
+                book_order.push(book.clone());
+                (Vec::new(), HashMap::new())
+            });
+
+            let entries = chapters.entry(chapter.clone()).or_insert_with(|| {
+                chapter_order.push(chapter.clone());
+                Vec::new()
+            });
+
+            entries.push(BookChapterEntryItem {
+                id: entry.id.clone(),
+                title: entry.title.clone(),
+                section_title: if entry.title.is_empty() {
+                    entry.id.clone()
+                } else {
+                    entry.title.clone()
+                },
+                weight: entry.weight,
+                category: entry.category.clone(),
+                subcategory: entry.subcategory.clone(),
+            });
+        }
+
+        let mut result = Vec::new();
+        for book_name in book_order {
+            if let Some((chapter_order, mut chapters)) = book_map.remove(&book_name) {
+                let mut total_entries = 0;
+                let mut chapter_items = Vec::new();
+
+                for ch_name in chapter_order {
+                    if let Some(entries) = chapters.remove(&ch_name) {
+                        let count = entries.len();
+                        total_entries += count;
+                        chapter_items.push(BookChapterTreeItem {
+                            chapter_name: ch_name,
+                            count,
+                            entries,
+                        });
+                    }
+                }
+
+                result.push(BookSummaryItem {
+                    book_name,
+                    entry_count: total_entries,
+                    chapter_count: chapter_items.len(),
+                    chapters: chapter_items,
+                });
+            }
+        }
+
+        result
+    }
+
+    /// 查询特定书目的章节树
+    pub fn get_book_chapter_tree(&self, target_book: &str) -> Option<BookSummaryItem> {
+        let books = self.list_books();
+        books
+            .into_iter()
+            .find(|b| b.book_name == target_book || b.book_name.contains(target_book))
+    }
 }
 
 /// 扫描目录定位 manifest.json 或 corpus 根目录
@@ -171,5 +257,13 @@ mod tests {
         assert_eq!(tree.len(), 1);
         assert_eq!(tree[0].count, 1);
         assert_eq!(tree[0].subcategories[0].count, 1);
+
+        let books = index.list_books();
+        assert_eq!(books.len(), 1);
+        assert_eq!(books[0].book_name, "药典");
+        assert_eq!(books[0].entry_count, 1);
+
+        let chapter_tree = index.get_book_chapter_tree("药典");
+        assert!(chapter_tree.is_some());
     }
 }

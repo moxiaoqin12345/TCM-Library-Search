@@ -14,8 +14,8 @@ pub use error::{CoreError, Result};
 pub use index::{locate_manifest_path, CorpusIndex};
 pub use matcher::search_corpus;
 pub use models::{
-    CategoryTreeItem, CorpusConditions, CorpusImage, CorpusManifest, CorpusMetadata, CorpusStatus,
-    ManifestCategory, ManifestEntry, ManifestSubcategory, SearchQuery, SearchResultItem,
-    SubcategoryTreeItem, TcmEntryDetail,
+    BookChapterEntryItem, BookChapterTreeItem, BookSummaryItem, CategoryTreeItem, CorpusConditions,
+    CorpusImage, CorpusManifest, CorpusMetadata, CorpusStatus, ManifestCategory, ManifestEntry,
+    ManifestSubcategory, SearchQuery, SearchResultItem, SubcategoryTreeItem, TcmEntryDetail,
 };
 pub use parser::parse_markdown_entry;
