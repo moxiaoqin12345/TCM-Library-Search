@@ -4,7 +4,8 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    BookSummaryItem, CategoryTreeItem, CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail,
+    check_herb_compatibility, BookSummaryItem, CategoryTreeItem, CompatibilityAlert, CorpusStatus,
+    SearchQuery, SearchResultItem, TcmEntryDetail,
 };
 
 /// 健康检查
@@ -111,6 +112,12 @@ fn load_image_data_uri(
     manager.load_image_data_uri(&id, &relative_path)
 }
 
+/// 药对配伍禁忌碰撞检测（十八反、十九畏、妊娠用药禁忌）
+#[tauri::command]
+fn check_compatibility(herbs: Vec<String>) -> Vec<CompatibilityAlert> {
+    check_herb_compatibility(&herbs)
+}
+
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     if let Ok(resource_dir) = app.path().resource_dir() {
         let bundled = resource_dir.join("corpus");
@@ -159,6 +166,7 @@ pub fn run() {
             get_entry_detail,
             resolve_image_path,
             load_image_data_uri,
+            check_compatibility,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
