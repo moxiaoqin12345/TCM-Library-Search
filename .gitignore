@@ -1,0 +1,48 @@
+# Rust
+/target
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# Node & Package Managers
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log*
+
+# Build outputs
+dist/
+build/
+out/
+
+# Tauri
+crates/**/src-tauri/target/
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.pem
+
+# IDEs and Editors
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.sublime-project
+*.sublime-workspace
+*.swp
+*.swo
+*~
+
+# Operating System
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Scratch and Logs
+*.log
+scratch/
+tmp/
