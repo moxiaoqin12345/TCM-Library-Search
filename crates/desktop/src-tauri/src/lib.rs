@@ -4,7 +4,10 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    BookSummaryItem, CategoryTreeItem, CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail,
+    check_herb_compatibility, diff_texts, find_acupoint, get_meridian_knowledge_base,
+    recommend_acupoints_for_symptom, AcupointInfo, BookSummaryItem, CategoryTreeItem,
+    CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery, SearchResultItem, TcmEntryDetail,
+    TextDiffResult,
 };
 
 /// 健康检查
@@ -111,6 +114,36 @@ fn load_image_data_uri(
     manager.load_image_data_uri(&id, &relative_path)
 }
 
+/// 药对配伍禁忌碰撞检测（十八反、十九畏、妊娠用药禁忌）
+#[tauri::command]
+fn check_compatibility(herbs: Vec<String>) -> Vec<CompatibilityAlert> {
+    check_herb_compatibility(&herbs)
+}
+
+/// 古今双篇典籍正文异文互校对比
+#[tauri::command]
+fn diff_text_versions(text_a: String, text_b: String) -> TextDiffResult {
+    diff_texts(&text_a, &text_b)
+}
+
+/// 获取全量十四经脉与重点穴位知识库
+#[tauri::command]
+fn list_meridians() -> Vec<MeridianInfo> {
+    get_meridian_knowledge_base()
+}
+
+/// 穴位临床速查与定位辨析
+#[tauri::command]
+fn get_acupoint_detail(name: String) -> Option<AcupointInfo> {
+    find_acupoint(&name)
+}
+
+/// 依据临床病症智能推荐对偶配穴处方
+#[tauri::command]
+fn recommend_acupoints(symptom: String) -> Vec<AcupointInfo> {
+    recommend_acupoints_for_symptom(&symptom)
+}
+
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     if let Ok(resource_dir) = app.path().resource_dir() {
         let bundled = resource_dir.join("corpus");
@@ -159,6 +192,11 @@ pub fn run() {
             get_entry_detail,
             resolve_image_path,
             load_image_data_uri,
+            check_compatibility,
+            diff_text_versions,
+            list_meridians,
+            get_acupoint_detail,
+            recommend_acupoints,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

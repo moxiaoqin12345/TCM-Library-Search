@@ -7,6 +7,8 @@ import {
 import {
   BookSummaryItem,
   CategoryTreeItem,
+  checkHerbCompatibility,
+  CompatibilityAlert,
   getBookChapters,
   getEntryDetail,
   listBooks,
@@ -35,6 +37,9 @@ import { HomePanel } from "../components/HomePanel";
 import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { TermPopover } from "../components/TermPopover";
+import { CompatibilityRadar } from "../components/CompatibilityRadar";
+import { DiffModal } from "../components/DiffModal";
+import { MeridianPanel } from "../components/MeridianPanel";
 import { highlightTcmKeywords } from "../utils/highlighter";
 import { exportEntryToMarkdown } from "../services/export";
 import {
@@ -55,7 +60,7 @@ interface ReaderViewProps {
 
 export default function ReaderView(props: ReaderViewProps) {
   // 导航状态
-  const [activeNav, setActiveNav] = createSignal<string>("search");
+  const [activeNav, setActiveNav] = createSignal<string>("home");
 
   // 典籍与检索数据状态
   const [categories, setCategories] = createSignal<CategoryTreeItem[]>([]);
@@ -143,6 +148,12 @@ export default function ReaderView(props: ReaderViewProps) {
     title: string;
     caption?: string;
   } | null>(null);
+
+  // 配伍禁忌实时雷达检测告警状态
+  const [compatibilityAlerts, setCompatibilityAlerts] = createSignal<CompatibilityAlert[]>([]);
+
+  // 异文互校对比模态框显隐
+  const [isDiffModalOpen, setIsDiffModalOpen] = createSignal<boolean>(false);
 
   // 综合计算当前条目的所有临床聚焦词（用于正文自动高亮与定位）
   const activeHighlightKeywords = () => {
@@ -315,6 +326,27 @@ export default function ReaderView(props: ReaderViewProps) {
           }
         }
       }
+
+      // 触发配伍禁忌实时碰撞雷达分析（搜集药名维度及方药名）
+      const herbsToCheck: string[] = [];
+      if (detail.metadata.conditions.yaoming) {
+        herbsToCheck.push(...detail.metadata.conditions.yaoming);
+      }
+      // 提取标题中的药材/方剂主要成分
+      if (detail.metadata.section_title) {
+        herbsToCheck.push(detail.metadata.section_title);
+      }
+      if (herbsToCheck.length > 0) {
+        try {
+          const alerts = await checkHerbCompatibility(herbsToCheck);
+          setCompatibilityAlerts(alerts);
+        } catch (e) {
+          console.warn("Herb compatibility check failed:", e);
+          setCompatibilityAlerts([]);
+        }
+      } else {
+        setCompatibilityAlerts([]);
+      }
     } catch (err) {
       console.error("Failed to load detail:", err);
     } finally {
@@ -382,6 +414,14 @@ export default function ReaderView(props: ReaderViewProps) {
     setLightboxImage({ src, title, caption });
   };
 
+  const handleOpenDiffFromHome = async () => {
+    if (!activeEntry()) {
+      const defaultId = items().length > 0 ? items()[0].id : "shanghanlun_001";
+      await selectEntry(defaultId);
+    }
+    setIsDiffModalOpen(true);
+  };
+
   return (
     <div class={styles.layoutContainer}>
       {/* 1. 左侧图标导航栏 */}
@@ -392,92 +432,123 @@ export default function ReaderView(props: ReaderViewProps) {
         currentTheme={currentTheme()}
       />
 
-      {/* 2. 中间面板（依据导航切换） */}
-      <div class={styles.middlePanelWrapper}>
-        <Show when={activeNav() === "home"}>
+      {/* 2. 全宽主页研读门户（当 activeNav === 'home' 时独占主工作区） */}
+      <Show when={activeNav() === "home"}>
+        <div class={styles.homeFullContainer}>
           <HomePanel
             totalEntries={totalCount()}
             totalCategories={categories().length}
             totalBooks={books().length}
             recentEntries={recentEntries()}
+            books={books()}
             onSelectEntry={(id) => {
               selectEntry(id);
               setActiveNav("search");
             }}
+            onSelectBook={(bookId) => {
+              handleSelectBook(bookId);
+              setActiveNav("library");
+            }}
+            onQuickSearch={(kw) => {
+              doSearch(kw, undefined, undefined);
+              setActiveNav("search");
+            }}
+            onOpenDiff={handleOpenDiffFromHome}
             onNavigate={(nav) => setActiveNav(nav)}
           />
-        </Show>
+        </div>
+      </Show>
 
-        <Show when={activeNav() === "search"}>
-          <SearchPanel
-            categories={categories()}
-            results={items()}
-            selectedEntryId={selectedId()}
-            isLoading={isLoading()}
-            onSearch={(kw, cat, sub) => doSearch(kw, cat, sub)}
-            onSelectEntry={(id) => selectEntry(id)}
-          />
-        </Show>
-
-        <Show when={activeNav() === "library"}>
-          <LibraryPanel
-            categories={categories()}
-            books={books()}
-            selectedBookId={selectedBookId()}
-            activeBookTree={activeBookTree()}
-            selectedEntryId={selectedId()}
-            onSelectBook={handleSelectBook}
-            onSelectEntry={(id) => selectEntry(id)}
-            onBackToBooks={handleBackToBooks}
-            onFilterCategory={(cat) => doSearch("", cat || undefined, undefined)}
-          />
-        </Show>
-
-        <Show when={activeNav() === "bookmark"}>
-          <BookmarkPanel
-            bookmarks={bookmarks()}
-            onSelectEntry={(id) => {
-              selectEntry(id);
+      {/* 3. 经络穴位专用工作台（当 activeNav === 'meridian' 时独占主工作区） */}
+      <Show when={activeNav() === "meridian"}>
+        <div style={{ flex: 1, height: "100%", overflow: "hidden" }}>
+          <MeridianPanel
+            onSearchGlobal={(kw) => {
+              doSearch(kw, undefined, undefined);
               setActiveNav("search");
             }}
-            onRemoveBookmark={handleRemoveBookmark}
-            onUpdateNote={handleUpdateBookmarkNote}
+            onSelectAcupoint={(ptName) => {
+              doSearch(ptName, undefined, undefined);
+              setActiveNav("search");
+            }}
           />
-        </Show>
+        </div>
+      </Show>
 
-        <Show when={activeNav() === "settings"}>
-          <SettingsPanel
-            fontFamily={currentFontFamily()}
-            fontSize={currentFontSize()}
-            lineHeight={currentLineHeight()}
-            theme={currentTheme()}
-            showOriginal={showOriginal()}
-            showCommentary={showCommentary()}
-            showSummary={showSummary()}
-            totalEntries={totalCount()}
-            onFontFamilyChange={setCurrentFontFamily}
-            onFontSizeChange={setCurrentFontSize}
-            onLineHeightChange={setCurrentLineHeight}
-            onThemeChange={setCurrentTheme}
-            onToggleOriginal={() => setShowOriginal(!showOriginal())}
-            onToggleCommentary={() => setShowCommentary(!showCommentary())}
-            onToggleSummary={() => setShowSummary(!showSummary())}
-          />
-        </Show>
-      </div>
+      {/* 4. 常规双栏研读工作区（检索 / 书库 / 收藏 / 设置） */}
+      <Show when={activeNav() !== "home" && activeNav() !== "meridian"}>
+        <div class={styles.middlePanelWrapper}>
 
-      {/* 3. 右侧阅读器工作区 */}
-      <main class={styles.readerPane}>
-        <Show
-          when={activeEntry()}
-          fallback={
-            <div class={styles.emptyView}>
-              <div class={styles.emptyIcon}>📖</div>
-              <h3>请在左侧选择典籍篇目</h3>
-              <p>可按全局检索、典籍书库或中医证治体系进行研读</p>
-            </div>
-          }
-        >
+          <Show when={activeNav() === "search"}>
+            <SearchPanel
+              categories={categories()}
+              results={items()}
+              selectedEntryId={selectedId()}
+              isLoading={isLoading()}
+              onSearch={(kw, cat, sub) => doSearch(kw, cat, sub)}
+              onSelectEntry={(id) => selectEntry(id)}
+            />
+          </Show>
+
+          <Show when={activeNav() === "library"}>
+            <LibraryPanel
+              categories={categories()}
+              books={books()}
+              selectedBookId={selectedBookId()}
+              activeBookTree={activeBookTree()}
+              selectedEntryId={selectedId()}
+              onSelectBook={handleSelectBook}
+              onSelectEntry={(id) => selectEntry(id)}
+              onBackToBooks={handleBackToBooks}
+              onFilterCategory={(cat) => doSearch("", cat || undefined, undefined)}
+            />
+          </Show>
+
+          <Show when={activeNav() === "bookmark"}>
+            <BookmarkPanel
+              bookmarks={bookmarks()}
+              onSelectEntry={(id) => {
+                selectEntry(id);
+                setActiveNav("search");
+              }}
+              onRemoveBookmark={handleRemoveBookmark}
+              onUpdateNote={handleUpdateBookmarkNote}
+            />
+          </Show>
+
+          <Show when={activeNav() === "settings"}>
+            <SettingsPanel
+              fontFamily={currentFontFamily()}
+              fontSize={currentFontSize()}
+              lineHeight={currentLineHeight()}
+              theme={currentTheme()}
+              showOriginal={showOriginal()}
+              showCommentary={showCommentary()}
+              showSummary={showSummary()}
+              totalEntries={totalCount()}
+              onFontFamilyChange={setCurrentFontFamily}
+              onFontSizeChange={setCurrentFontSize}
+              onLineHeightChange={setCurrentLineHeight}
+              onThemeChange={setCurrentTheme}
+              onToggleOriginal={() => setShowOriginal(!showOriginal())}
+              onToggleCommentary={() => setShowCommentary(!showCommentary())}
+              onToggleSummary={() => setShowSummary(!showSummary())}
+            />
+          </Show>
+        </div>
+
+        {/* 4. 右侧阅读器工作区 */}
+        <main class={styles.readerPane}>
+          <Show
+            when={activeEntry()}
+            fallback={
+              <div class={styles.emptyView}>
+                <div class={styles.emptyIcon}>📖</div>
+                <h3>请在左侧选择典籍篇目</h3>
+                <p>可按全局检索、典籍书库或中医证治体系进行研读</p>
+              </div>
+            }
+          >
           {/* 阅读器顶部工具栏 */}
           <header class={styles.readerHeader}>
             <div class={styles.headerMain}>
@@ -534,6 +605,16 @@ export default function ReaderView(props: ReaderViewProps) {
                 </button>
               </div>
 
+              {/* 古今异文互校对比 */}
+              <button
+                type="button"
+                class={styles.diffBtn}
+                onClick={() => setIsDiffModalOpen(true)}
+                title="开启古今不同刊本/传抄本异文互校分屏比对（如宋本、赵开美本、桂林古本、康治本）"
+              >
+                ⚖️ 异文互校
+              </button>
+
               {/* 导出当前条目 */}
               <button
                 type="button"
@@ -571,6 +652,15 @@ export default function ReaderView(props: ReaderViewProps) {
                 ⏳ 正在载入典籍正文与名家阐微...
               </div>
             </Show>
+
+            {/* 配伍禁忌实时雷达预警卡 */}
+            <CompatibilityRadar
+              alerts={compatibilityAlerts()}
+              onHerbClick={(herb) => {
+                doSearch(herb, undefined, undefined);
+                setActiveNav("search");
+              }}
+            />
 
             {/* 1. 原文卡片 */}
             <Show when={showOriginal()}>
@@ -670,6 +760,7 @@ export default function ReaderView(props: ReaderViewProps) {
           </div>
         </Show>
       </main>
+      </Show>
 
       {/* 划词/双击中医药术语速查浮动卡片 */}
       <Show when={popoverState()}>
@@ -696,6 +787,14 @@ export default function ReaderView(props: ReaderViewProps) {
           title={lightboxImage()!.title}
           caption={lightboxImage()!.caption}
           onClose={() => setLightboxImage(null)}
+        />
+      </Show>
+
+      {/* 古今双篇典籍异文互校分屏比对模态窗 */}
+      <Show when={isDiffModalOpen() && activeEntry()}>
+        <DiffModal
+          currentEntry={activeEntry()!}
+          onClose={() => setIsDiffModalOpen(false)}
         />
       </Show>
     </div>
