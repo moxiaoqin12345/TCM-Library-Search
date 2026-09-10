@@ -3,8 +3,8 @@ use std::fs;
 use std::path::PathBuf;
 use std::sync::{Arc, RwLock};
 use tcm_library_core::{
-    parse_markdown_entry, search_corpus, CategoryTreeItem, CorpusIndex, CorpusStatus, SearchQuery,
-    SearchResultItem, TcmEntryDetail,
+    parse_markdown_entry, search_corpus, BookSummaryItem, CategoryTreeItem, CorpusIndex,
+    CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail,
 };
 
 /// 典籍文库生命周期管理器
@@ -64,6 +64,20 @@ impl CorpusManager {
     pub fn list_categories(&self) -> Vec<CategoryTreeItem> {
         let index = self.index.read().unwrap();
         index.build_category_tree()
+    }
+
+    /// 获取所有典籍书目及其卷次章节树
+    pub fn list_books(&self) -> Vec<BookSummaryItem> {
+        let index = self.index.read().unwrap();
+        index.list_books()
+    }
+
+    /// 获取特定典籍的篇章章节目录
+    pub fn get_book_chapters(&self, book: &str) -> Result<BookSummaryItem, String> {
+        let index = self.index.read().unwrap();
+        index
+            .get_book_chapter_tree(book)
+            .ok_or_else(|| format!("未找到典籍: {}", book))
     }
 
     /// 多维与模糊检索

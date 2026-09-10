@@ -4,7 +4,7 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    CategoryTreeItem, CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail,
+    BookSummaryItem, CategoryTreeItem, CorpusStatus, SearchQuery, SearchResultItem, TcmEntryDetail,
 };
 
 /// 健康检查
@@ -60,6 +60,21 @@ fn get_corpus_status(manager: State<CorpusManager>) -> CorpusStatus {
 #[tauri::command]
 fn list_categories(manager: State<CorpusManager>) -> Vec<CategoryTreeItem> {
     manager.list_categories()
+}
+
+/// 获取全量典籍书目及其篇章树
+#[tauri::command]
+fn list_books(manager: State<CorpusManager>) -> Vec<BookSummaryItem> {
+    manager.list_books()
+}
+
+/// 获取指定典籍的卷次章节结构
+#[tauri::command]
+fn get_book_chapters(
+    manager: State<CorpusManager>,
+    book: String,
+) -> Result<BookSummaryItem, String> {
+    manager.get_book_chapters(&book)
 }
 
 /// 多维与关键词综合检索
@@ -138,6 +153,8 @@ pub fn run() {
             app_window_start_dragging,
             get_corpus_status,
             list_categories,
+            list_books,
+            get_book_chapters,
             search_entries,
             get_entry_detail,
             resolve_image_path,
