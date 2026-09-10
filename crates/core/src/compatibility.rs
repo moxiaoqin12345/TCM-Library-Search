@@ -253,7 +253,8 @@ const SHIJIU_WEI_RULES: &[RuleItem] = &[
         incomp_type: IncompatibilityType::ShijiuWei,
         severity: IncompatibilitySeverity::Warning,
         rhyme: "官桂善能调冷气，若逢石脂便相欺；人参最怕五灵脂",
-        explanation: "人参大补元气健脾养胃，五灵脂行气活血散瘀止痛。古人认为同用相互克制降低补气之效。",
+        explanation:
+            "人参大补元气健脾养胃，五灵脂行气活血散瘀止痛。古人认为同用相互克制降低补气之效。",
     },
     RuleItem {
         herb_a: "肉桂",
@@ -415,7 +416,10 @@ mod tests {
         let formula = vec!["川乌".to_string(), "半夏".to_string(), "白术".to_string()];
         let alerts = check_herb_compatibility(&formula);
         assert!(!alerts.is_empty());
-        assert_eq!(alerts[0].incompatibility_type, IncompatibilityType::ShibaFan);
+        assert_eq!(
+            alerts[0].incompatibility_type,
+            IncompatibilityType::ShibaFan
+        );
         assert_eq!(alerts[0].severity, IncompatibilitySeverity::Severe);
     }
 
@@ -424,7 +428,10 @@ mod tests {
         let formula = vec!["人参".to_string(), "五灵脂".to_string(), "当归".to_string()];
         let alerts = check_herb_compatibility(&formula);
         assert!(!alerts.is_empty());
-        assert_eq!(alerts[0].incompatibility_type, IncompatibilityType::ShijiuWei);
+        assert_eq!(
+            alerts[0].incompatibility_type,
+            IncompatibilityType::ShijiuWei
+        );
     }
 
     #[test]
