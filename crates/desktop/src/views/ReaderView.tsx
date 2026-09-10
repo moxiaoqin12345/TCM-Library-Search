@@ -39,6 +39,7 @@ import { SettingsPanel } from "../components/SettingsPanel";
 import { TermPopover } from "../components/TermPopover";
 import { CompatibilityRadar } from "../components/CompatibilityRadar";
 import { DiffModal } from "../components/DiffModal";
+import { MeridianPanel } from "../components/MeridianPanel";
 import { highlightTcmKeywords } from "../utils/highlighter";
 import { exportEntryToMarkdown } from "../services/export";
 import {
@@ -423,92 +424,109 @@ export default function ReaderView(props: ReaderViewProps) {
         currentTheme={currentTheme()}
       />
 
-      {/* 2. 中间面板（依据导航切换） */}
-      <div class={styles.middlePanelWrapper}>
-        <Show when={activeNav() === "home"}>
-          <HomePanel
-            totalEntries={totalCount()}
-            totalCategories={categories().length}
-            totalBooks={books().length}
-            recentEntries={recentEntries()}
-            onSelectEntry={(id) => {
-              selectEntry(id);
+      {/* 2. 经络穴位专用工作台（当 activeNav === 'meridian' 时独占主工作区） */}
+      <Show when={activeNav() === "meridian"}>
+        <div style={{ flex: 1, height: "100%", overflow: "hidden" }}>
+          <MeridianPanel
+            onSearchGlobal={(kw) => {
+              doSearch(kw, undefined, undefined);
               setActiveNav("search");
             }}
-            onNavigate={(nav) => setActiveNav(nav)}
-          />
-        </Show>
-
-        <Show when={activeNav() === "search"}>
-          <SearchPanel
-            categories={categories()}
-            results={items()}
-            selectedEntryId={selectedId()}
-            isLoading={isLoading()}
-            onSearch={(kw, cat, sub) => doSearch(kw, cat, sub)}
-            onSelectEntry={(id) => selectEntry(id)}
-          />
-        </Show>
-
-        <Show when={activeNav() === "library"}>
-          <LibraryPanel
-            categories={categories()}
-            books={books()}
-            selectedBookId={selectedBookId()}
-            activeBookTree={activeBookTree()}
-            selectedEntryId={selectedId()}
-            onSelectBook={handleSelectBook}
-            onSelectEntry={(id) => selectEntry(id)}
-            onBackToBooks={handleBackToBooks}
-            onFilterCategory={(cat) => doSearch("", cat || undefined, undefined)}
-          />
-        </Show>
-
-        <Show when={activeNav() === "bookmark"}>
-          <BookmarkPanel
-            bookmarks={bookmarks()}
-            onSelectEntry={(id) => {
-              selectEntry(id);
+            onSelectAcupoint={(ptName) => {
+              doSearch(ptName, undefined, undefined);
               setActiveNav("search");
             }}
-            onRemoveBookmark={handleRemoveBookmark}
-            onUpdateNote={handleUpdateBookmarkNote}
           />
-        </Show>
+        </div>
+      </Show>
 
-        <Show when={activeNav() === "settings"}>
-          <SettingsPanel
-            fontFamily={currentFontFamily()}
-            fontSize={currentFontSize()}
-            lineHeight={currentLineHeight()}
-            theme={currentTheme()}
-            showOriginal={showOriginal()}
-            showCommentary={showCommentary()}
-            showSummary={showSummary()}
-            totalEntries={totalCount()}
-            onFontFamilyChange={setCurrentFontFamily}
-            onFontSizeChange={setCurrentFontSize}
-            onLineHeightChange={setCurrentLineHeight}
-            onThemeChange={setCurrentTheme}
-            onToggleOriginal={() => setShowOriginal(!showOriginal())}
-            onToggleCommentary={() => setShowCommentary(!showCommentary())}
-            onToggleSummary={() => setShowSummary(!showSummary())}
-          />
-        </Show>
-      </div>
+      {/* 3. 中间常规面板（依据导航切换） */}
+      <Show when={activeNav() !== "meridian"}>
+        <div class={styles.middlePanelWrapper}>
+          <Show when={activeNav() === "home"}>
+            <HomePanel
+              totalEntries={totalCount()}
+              totalCategories={categories().length}
+              totalBooks={books().length}
+              recentEntries={recentEntries()}
+              onSelectEntry={(id) => {
+                selectEntry(id);
+                setActiveNav("search");
+              }}
+              onNavigate={(nav) => setActiveNav(nav)}
+            />
+          </Show>
 
-      {/* 3. 右侧阅读器工作区 */}
-      <main class={styles.readerPane}>
-        <Show
-          when={activeEntry()}
-          fallback={
-            <div class={styles.emptyView}>
-              <div class={styles.emptyIcon}>📖</div>
-              <h3>请在左侧选择典籍篇目</h3>
-              <p>可按全局检索、典籍书库或中医证治体系进行研读</p>
-            </div>
-          }
-        >
+          <Show when={activeNav() === "search"}>
+            <SearchPanel
+              categories={categories()}
+              results={items()}
+              selectedEntryId={selectedId()}
+              isLoading={isLoading()}
+              onSearch={(kw, cat, sub) => doSearch(kw, cat, sub)}
+              onSelectEntry={(id) => selectEntry(id)}
+            />
+          </Show>
+
+          <Show when={activeNav() === "library"}>
+            <LibraryPanel
+              categories={categories()}
+              books={books()}
+              selectedBookId={selectedBookId()}
+              activeBookTree={activeBookTree()}
+              selectedEntryId={selectedId()}
+              onSelectBook={handleSelectBook}
+              onSelectEntry={(id) => selectEntry(id)}
+              onBackToBooks={handleBackToBooks}
+              onFilterCategory={(cat) => doSearch("", cat || undefined, undefined)}
+            />
+          </Show>
+
+          <Show when={activeNav() === "bookmark"}>
+            <BookmarkPanel
+              bookmarks={bookmarks()}
+              onSelectEntry={(id) => {
+                selectEntry(id);
+                setActiveNav("search");
+              }}
+              onRemoveBookmark={handleRemoveBookmark}
+              onUpdateNote={handleUpdateBookmarkNote}
+            />
+          </Show>
+
+          <Show when={activeNav() === "settings"}>
+            <SettingsPanel
+              fontFamily={currentFontFamily()}
+              fontSize={currentFontSize()}
+              lineHeight={currentLineHeight()}
+              theme={currentTheme()}
+              showOriginal={showOriginal()}
+              showCommentary={showCommentary()}
+              showSummary={showSummary()}
+              totalEntries={totalCount()}
+              onFontFamilyChange={setCurrentFontFamily}
+              onFontSizeChange={setCurrentFontSize}
+              onLineHeightChange={setCurrentLineHeight}
+              onThemeChange={setCurrentTheme}
+              onToggleOriginal={() => setShowOriginal(!showOriginal())}
+              onToggleCommentary={() => setShowCommentary(!showCommentary())}
+              onToggleSummary={() => setShowSummary(!showSummary())}
+            />
+          </Show>
+        </div>
+
+        {/* 4. 右侧阅读器工作区 */}
+        <main class={styles.readerPane}>
+          <Show
+            when={activeEntry()}
+            fallback={
+              <div class={styles.emptyView}>
+                <div class={styles.emptyIcon}>📖</div>
+                <h3>请在左侧选择典籍篇目</h3>
+                <p>可按全局检索、典籍书库或中医证治体系进行研读</p>
+              </div>
+            }
+          >
           {/* 阅读器顶部工具栏 */}
           <header class={styles.readerHeader}>
             <div class={styles.headerMain}>
@@ -720,6 +738,7 @@ export default function ReaderView(props: ReaderViewProps) {
           </div>
         </Show>
       </main>
+      </Show>
 
       {/* 划词/双击中医药术语速查浮动卡片 */}
       <Show when={popoverState()}>

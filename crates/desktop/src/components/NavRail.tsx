@@ -41,6 +41,16 @@ const BookmarkIcon = () => (
   </svg>
 );
 
+const MeridianIcon = () => (
+  <svg class={styles.icon} viewBox="0 0 24 24">
+    <circle cx="12" cy="5" r="2.5" />
+    <circle cx="6" cy="12" r="2.5" />
+    <circle cx="18" cy="12" r="2.5" />
+    <circle cx="12" cy="19" r="2.5" />
+    <path d="M12 7.5v9M8.2 13.5l7.6-3M8.2 10.5l7.6 3" stroke-dasharray="2 2" />
+  </svg>
+);
+
 const SettingsIcon = () => (
   <svg class={styles.icon} viewBox="0 0 24 24">
     <circle cx="12" cy="12" r="3" />
@@ -67,6 +77,7 @@ export const NavRail: Component<NavRailProps> = (props) => {
     { id: 'home', label: '主页', icon: HomeIcon },
     { id: 'search', label: '检索', icon: SearchIcon },
     { id: 'library', label: '书库', icon: LibraryIcon },
+    { id: 'meridian', label: '经穴', icon: MeridianIcon },
     { id: 'bookmark', label: '收藏', icon: BookmarkIcon },
   ];
 
