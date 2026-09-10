@@ -53,6 +53,18 @@ fn app_window_start_dragging(window: tauri::Window) -> Result<(), String> {
     window.start_dragging().map_err(|e| e.to_string())
 }
 
+/// 重启应用（用于更新后重启生效）
+#[tauri::command]
+fn app_restart(app: tauri::AppHandle) {
+    app.restart();
+}
+
+/// 获取应用构建版本号
+#[tauri::command]
+fn get_app_version() -> String {
+    env!("CARGO_PKG_VERSION").to_string()
+}
+
 /// 获取文库总状态
 #[tauri::command]
 fn get_corpus_status(manager: State<CorpusManager>) -> CorpusStatus {
@@ -170,6 +182,7 @@ fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
 
 pub fn run() {
     tauri::Builder::default()
+        .plugin(tauri_plugin_updater::Builder::new().build())
         .setup(|app| {
             let corpus_dir = resolve_corpus_dir(app);
             let corpus_manager = CorpusManager::new(corpus_dir);
@@ -184,6 +197,8 @@ pub fn run() {
             app_window_is_maximized,
             app_window_close,
             app_window_start_dragging,
+            app_restart,
+            get_app_version,
             get_corpus_status,
             list_categories,
             list_books,

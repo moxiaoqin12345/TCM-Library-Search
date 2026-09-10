@@ -84,6 +84,21 @@ Phase 10: 本地化 RAG 智能中医药检索与问答增强 (Milestone M5)
 
 ---
 
+### Phase 8.5: 跨平台安全自动更新体系 (GitHub Releases Auto-Updater · 已交付)
+- [x] **Tauri v2 Auto-Updater 插件集成与 Minisign 密钥对生成**：
+  - 集成 `tauri-plugin-updater` 与 `@tauri-apps/plugin-updater`。
+  - 部署 Minisign 公私钥对签名机制，配置 `tauri.conf.json` 自动更新端点。
+  - CI/CD 自动打包并生成 `latest.json` 签名清单上传至 GitHub Releases。
+- [x] **典雅古韵更新模态框 (`UpdateModal.tsx`)**：
+  - 呈现新版本版本号、发布日期、更新日志（Changelog）与实时下载进度条。
+  - 一键安全重启生效（`app_restart` Facade）。
+- [x] **多入口 GUI 触发与版本标识**：
+  - 顶部标题栏（`TitleBar.tsx`）：当前版本号胶囊徽标与“🚀 检查更新”按钮。
+  - 设置面板（`SettingsPanel.tsx`）：独立“软件版本与在线更新”专区，显示上次检查时间与 Releases 通道状态。
+  - 主页研读门户（`HomePanel.tsx`）：底栏版本徽标与“🔄 检查更新”快捷按钮。
+
+---
+
 ### Phase 9: 临床证候智能推导选方引擎 (Milestone M4)
 - [ ] **证候关联矩阵与加权评分算法**：
   - 基于文库中 411+ 经典篇目的 11 维中医临床证治标签，建立“症状/舌苔/脉象 → 经典经方”概率矩阵。

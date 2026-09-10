@@ -630,3 +630,72 @@
   opacity: 0.6;
 }
 
+/* 6. 文库页脚 */
+.homeFooter {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+  margin-top: 2rem;
+  padding: 1.5rem 0 1rem 0;
+  border-top: 1px solid var(--border-default);
+}
+
+.footerLeft {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.footerBrand {
+  font-family: var(--font-serif);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.footerCopyright {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+}
+
+.footerRight {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.versionBadge {
+  font-size: 0.78rem;
+  font-family: var(--font-mono, monospace);
+  font-weight: 600;
+  color: var(--accent-gold);
+  background-color: var(--accent-gold-soft);
+  padding: 3px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--accent-gold-border, rgba(197, 160, 89, 0.3));
+}
+
+.updateCheckBtn {
+  font-size: 0.8rem;
+  font-family: inherit;
+  font-weight: 600;
+  color: var(--text-primary);
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  padding: 4px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.updateCheckBtn:hover {
+  background-color: var(--bg-hover);
+  border-color: var(--accent-cinnabar);
+  color: var(--accent-cinnabar);
+}
+

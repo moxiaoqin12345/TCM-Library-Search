@@ -8,6 +8,8 @@ export interface HomePanelProps {
   totalBooks: number;
   recentEntries: Array<{ id: string; title: string; book: string; subcategory: string }>;
   books: BookInfo[];
+  appVersion?: string;
+  onCheckUpdate?: () => void;
   onSelectEntry: (id: string) => void;
   onSelectBook: (bookId: string) => void;
   onQuickSearch: (keyword: string) => void;
@@ -332,6 +334,27 @@ export const HomePanel: Component<HomePanelProps> = (props) => {
           </For>
         </div>
       </section>
+
+      {/* 6. 文库页脚与版本标识 */}
+      <footer class={styles.homeFooter}>
+        <div class={styles.footerLeft}>
+          <span class={styles.footerBrand}>岐黄正脉 · 中医典籍知识文库</span>
+          <span class={styles.footerCopyright}>传承历代岐黄精华 · 开放开源中医药学术数字化平台</span>
+        </div>
+        <div class={styles.footerRight}>
+          <span class={styles.versionBadge}>{props.appVersion ? `v${props.appVersion}` : 'v0.2.0'}</span>
+          {props.onCheckUpdate && (
+            <button
+              type="button"
+              class={styles.updateCheckBtn}
+              onClick={props.onCheckUpdate}
+              title="检查 GitHub Releases 最新版本"
+            >
+              🔄 检查更新
+            </button>
+          )}
+        </div>
+      </footer>
     </div>
   );
 };

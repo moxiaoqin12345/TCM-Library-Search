@@ -56,6 +56,10 @@ import styles from "./ReaderView.module.css";
 
 interface ReaderViewProps {
   onTotalCountChange?: (count: number) => void;
+  appVersion?: string;
+  onCheckUpdate?: () => void;
+  isCheckingUpdate?: boolean;
+  lastUpdateCheckTime?: string;
 }
 
 export default function ReaderView(props: ReaderViewProps) {
@@ -455,6 +459,8 @@ export default function ReaderView(props: ReaderViewProps) {
             }}
             onOpenDiff={handleOpenDiffFromHome}
             onNavigate={(nav) => setActiveNav(nav)}
+            appVersion={props.appVersion}
+            onCheckUpdate={props.onCheckUpdate}
           />
         </div>
       </Show>
@@ -526,6 +532,10 @@ export default function ReaderView(props: ReaderViewProps) {
               showCommentary={showCommentary()}
               showSummary={showSummary()}
               totalEntries={totalCount()}
+              appVersion={props.appVersion}
+              onCheckUpdate={props.onCheckUpdate}
+              isCheckingUpdate={props.isCheckingUpdate}
+              lastUpdateCheckTime={props.lastUpdateCheckTime}
               onFontFamilyChange={setCurrentFontFamily}
               onFontSizeChange={setCurrentFontSize}
               onLineHeightChange={setCurrentLineHeight}

@@ -1,4 +1,4 @@
-import { createSignal, onMount } from "solid-js";
+import { createSignal, onMount, Show } from "solid-js";
 import {
   appWindowClose,
   appWindowIsMaximized,
@@ -6,6 +6,7 @@ import {
   appWindowStartDragging,
   appWindowToggleMaximize,
 } from "../services/api";
+import { getAppVersion } from "../services/updater";
 import {
   currentFontSize,
   currentTheme,
@@ -17,10 +18,13 @@ import styles from "./TitleBar.module.css";
 
 interface TitleBarProps {
   totalCount?: number;
+  onCheckUpdate?: () => void;
+  isCheckingUpdate?: boolean;
 }
 
 export default function TitleBar(props: TitleBarProps) {
   const [isMaximized, setIsMaximized] = createSignal(false);
+  const [appVersion, setAppVersion] = createSignal("0.2.0");
 
   onMount(async () => {
     try {
@@ -29,6 +33,11 @@ export default function TitleBar(props: TitleBarProps) {
     } catch {
       // 浏览器预览静默降级
     }
+
+    try {
+      const ver = await getAppVersion();
+      setAppVersion(ver);
+    } catch {}
   });
 
   const handleMinimize = () => appWindowMinimize().catch(() => {});
@@ -55,6 +64,7 @@ export default function TitleBar(props: TitleBarProps) {
       <div class={styles.brand}>
         <span class={styles.logo}>📜</span>
         <span class={styles.title}>中医典籍文库</span>
+        <span class={styles.versionBadge}>v{appVersion()}</span>
         {props.totalCount ? (
           <span class={styles.badge}>{props.totalCount} 篇条目</span>
         ) : null}
@@ -87,6 +97,18 @@ export default function TitleBar(props: TitleBarProps) {
         >
           {currentTheme() === "rice-paper" ? "🏮 仿古宣纸" : "🎋 暮墨玄竹"}
         </button>
+
+        {/* 检查更新快捷按钮 */}
+        <Show when={props.onCheckUpdate}>
+          <button
+            type="button"
+            class={styles.toolBtn}
+            onClick={props.onCheckUpdate}
+            title="检查软件在线更新 (GitHub Releases)"
+          >
+            {props.isCheckingUpdate ? "🔄 检查中..." : "🚀 检查更新"}
+          </button>
+        </Show>
 
         {/* 窗口控制按钮 */}
         <div class={styles.windowControls}>

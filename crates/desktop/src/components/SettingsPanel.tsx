@@ -14,6 +14,10 @@ export interface SettingsPanelProps {
   showCommentary: boolean;
   showSummary: boolean;
   totalEntries: number;
+  appVersion?: string;
+  onCheckUpdate?: () => void;
+  isCheckingUpdate?: boolean;
+  lastUpdateCheckTime?: string;
   onFontFamilyChange: (v: FontFamily) => void;
   onFontSizeChange: (v: FontSize) => void;
   onLineHeightChange: (v: LineHeight) => void;
@@ -117,6 +121,37 @@ export const SettingsPanel: Component<SettingsPanelProps> = (props) => {
           </div>
         </div>
 
+        {/* 软件版本与自动更新 */}
+        <div class={styles.updateSection}>
+          <div class={styles.settingLabel}>软件版本与在线更新</div>
+          <div class={styles.updateCard}>
+            <div class={styles.updateInfo}>
+              <div class={styles.updateVersionRow}>
+                <span class={styles.updateProduct}>中医典籍文库</span>
+                <span class={styles.updateVersionPill}>v{props.appVersion || "0.2.0"}</span>
+                <span class={styles.updateChannel}>GitHub Releases</span>
+              </div>
+              <p class={styles.updateDesc}>
+                支持通过官方 GitHub Releases 自动拉取跨平台安全更新与最新中医算力规则库。
+              </p>
+              <div class={styles.updateCheckTime}>
+                上次检测：{props.lastUpdateCheckTime || "尚未检测"}
+              </div>
+            </div>
+            <div class={styles.updateActionArea}>
+              <button
+                type="button"
+                class={styles.checkUpdateBtn}
+                disabled={props.isCheckingUpdate}
+                onClick={props.onCheckUpdate}
+                title="检查 GitHub Releases 最新版本"
+              >
+                {props.isCheckingUpdate ? "🔄 正在连接..." : "🚀 检查更新"}
+              </button>
+            </div>
+          </div>
+        </div>
+
         {/* 研读数据备份与迁移 */}
         <div class={styles.backupSection}>
           <div class={styles.settingLabel}>研读数据备份与迁移</div>
@@ -158,7 +193,7 @@ export const SettingsPanel: Component<SettingsPanelProps> = (props) => {
       </div>
 
       <div class={styles.footer}>
-        <p>中医典籍文库 v1.0.0 · 已收录条目：{props.totalEntries}</p>
+        <p>中医典籍文库 v{props.appVersion || "0.2.0"} · 已收录条目：{props.totalEntries}</p>
       </div>
     </div>
   );
