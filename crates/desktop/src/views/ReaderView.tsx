@@ -34,6 +34,8 @@ import { LibraryPanel, BookInfo } from "../components/LibraryPanel";
 import { HomePanel } from "../components/HomePanel";
 import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
+import { TermPopover } from "../components/TermPopover";
+import { highlightTcmKeywords } from "../utils/highlighter";
 import {
   BookmarkItem,
   RecentEntryItem,
@@ -123,6 +125,16 @@ export default function ReaderView(props: ReaderViewProps) {
   // 当前正在点读的书籍章节树
   const [activeBookTree, setActiveBookTree] = createSignal<BookSummaryItem | null>(null);
 
+  // 当前激活的高亮关键词（包括检索词与选中的临床属性）
+  const [currentSearchKeyword, setCurrentSearchKeyword] = createSignal<string>("");
+
+  // 划词/双击浮动释义卡状态
+  const [popoverState, setPopoverState] = createSignal<{
+    term: string;
+    x: number;
+    y: number;
+  } | null>(null);
+
   // 插图图片缓存与灯箱
   const [imageMap, setImageMap] = createSignal<Record<string, string>>({});
   const [lightboxImage, setLightboxImage] = createSignal<{
@@ -130,6 +142,44 @@ export default function ReaderView(props: ReaderViewProps) {
     title: string;
     caption?: string;
   } | null>(null);
+
+  // 综合计算当前条目的所有临床聚焦词（用于正文自动高亮与定位）
+  const activeHighlightKeywords = () => {
+    const list: string[] = [];
+    const kw = currentSearchKeyword().trim();
+    if (kw) list.push(kw);
+
+    const cur = activeEntry();
+    if (cur) {
+      const cond = cur.metadata.conditions;
+      if (cond) {
+        if (cond.yaoming) list.push(...cond.yaoming);
+        if (cond.fangming) list.push(...cond.fangming);
+        if (cond.zhengxing) list.push(...cond.zhengxing);
+        if (cond.zhifa) list.push(...cond.zhifa);
+        if (cond.zhengzhuang) list.push(...cond.zhengzhuang);
+        if (cond.bingzheng) list.push(...cond.bingzheng);
+        if (cond.xuewei) list.push(...cond.xuewei);
+        if (cond.jingluo) list.push(...cond.jingluo);
+      }
+    }
+    return list;
+  };
+
+  // 处理正文选中划词或双击触发专业名词速查
+  const handleTextSelection = (e: MouseEvent) => {
+    const sel = window.getSelection();
+    if (!sel || sel.isCollapsed) return;
+    const text = sel.toString().trim();
+    // 过滤无意义字符与过长/过短选区
+    if (text.length >= 2 && text.length <= 16 && !/[\r\n]/.test(text)) {
+      setPopoverState({
+        term: text,
+        x: e.clientX,
+        y: e.clientY,
+      });
+    }
+  };
 
   // 初始化加载分类、首批条目与动态典籍列表
   onMount(async () => {
@@ -213,6 +263,7 @@ export default function ReaderView(props: ReaderViewProps) {
   // 执行搜索
   const doSearch = async (keyword: string, category?: string, subcategory?: string) => {
     setIsLoading(true);
+    setCurrentSearchKeyword(keyword);
     try {
       const kw = keyword.trim() || undefined;
       const res = await searchEntries({
@@ -507,9 +558,24 @@ export default function ReaderView(props: ReaderViewProps) {
             {/* 1. 原文卡片 */}
             <Show when={showOriginal()}>
               <div class={styles.originalCard}>
-                <div class={styles.cardSectionTag}>【 原文典经 】</div>
-                <div class={styles.originalText}>
-                  {activeEntry()!.original_text}
+                <div class={styles.cardSectionTag}>
+                  <span>【 原文典经 】</span>
+                  <Show when={currentSearchKeyword().trim()}>
+                    <span class={styles.clinicalHighlightTag}>
+                      聚焦词: {currentSearchKeyword().trim()}
+                    </span>
+                  </Show>
+                </div>
+                <div
+                  class={styles.originalText}
+                  onMouseUp={handleTextSelection}
+                  onDblClick={handleTextSelection}
+                >
+                  {highlightTcmKeywords(
+                    activeEntry()!.original_text,
+                    activeHighlightKeywords(),
+                    styles.highlightMark
+                  )}
                 </div>
               </div>
             </Show>
@@ -553,8 +619,16 @@ export default function ReaderView(props: ReaderViewProps) {
             <Show when={showCommentary() && activeEntry()!.commentary_text}>
               <div class={styles.commentaryCard}>
                 <div class={styles.commentaryTag}>【 先贤阐微 · 古注评析 】</div>
-                <div class={styles.commentaryText}>
-                  {activeEntry()!.commentary_text}
+                <div
+                  class={styles.commentaryText}
+                  onMouseUp={handleTextSelection}
+                  onDblClick={handleTextSelection}
+                >
+                  {highlightTcmKeywords(
+                    activeEntry()!.commentary_text!,
+                    activeHighlightKeywords(),
+                    styles.highlightMark
+                  )}
                 </div>
               </div>
             </Show>
@@ -563,14 +637,40 @@ export default function ReaderView(props: ReaderViewProps) {
             <Show when={showSummary() && activeEntry()!.summary_text}>
               <div class={styles.summaryCard}>
                 <div class={styles.summaryTag}>【 白话提要 · 理法方药精解 】</div>
-                <div class={styles.summaryText}>
-                  {activeEntry()!.summary_text}
+                <div
+                  class={styles.summaryText}
+                  onMouseUp={handleTextSelection}
+                  onDblClick={handleTextSelection}
+                >
+                  {highlightTcmKeywords(
+                    activeEntry()!.summary_text!,
+                    activeHighlightKeywords(),
+                    styles.highlightMark
+                  )}
                 </div>
               </div>
             </Show>
           </div>
         </Show>
       </main>
+
+      {/* 划词/双击中医药术语速查浮动卡片 */}
+      <Show when={popoverState()}>
+        <TermPopover
+          term={popoverState()!.term}
+          x={popoverState()!.x}
+          y={popoverState()!.y}
+          onClose={() => setPopoverState(null)}
+          onSelectEntry={(id) => {
+            selectEntry(id);
+            setActiveNav("search");
+          }}
+          onSearchGlobal={(kw) => {
+            doSearch(kw, undefined, undefined);
+            setActiveNav("search");
+          }}
+        />
+      </Show>
 
       {/* 灯箱模态层 */}
       <Show when={lightboxImage()}>

@@ -293,3 +293,33 @@
 .emptyIcon {
   font-size: 3.2rem;
 }
+
+/* 划词与关键词高亮样式 */
+.highlightMark {
+  background-color: var(--accent-gold-soft);
+  color: var(--accent-cinnabar);
+  border-bottom: 2px solid var(--accent-cinnabar);
+  border-radius: 2px;
+  padding: 1px 3px;
+  font-weight: 600;
+  transition: background-color 0.15s ease;
+}
+
+.highlightMark:hover {
+  background-color: rgba(184, 59, 38, 0.2);
+}
+
+.clinicalHighlightTag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  padding: 1px 6px;
+  border-radius: var(--radius-sm);
+  background-color: var(--accent-cinnabar-soft);
+  color: var(--accent-cinnabar);
+  border: 1px solid rgba(184, 59, 38, 0.25);
+  margin-left: 8px;
+  font-weight: normal;
+}
+
