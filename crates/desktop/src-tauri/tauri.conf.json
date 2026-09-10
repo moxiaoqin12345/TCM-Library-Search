@@ -44,7 +44,15 @@
     ],
     "shortDescription": "中医药智能典籍检索与阅读工作台",
     "longDescription": "面向中医药学者、临床医家与古籍爱好者的智能典籍检索与阅读平台，提供11维中医临床证治匹配与三层互文研读体验。",
-    "copyright": "Copyright © 2026 TCM-Library-Search Contributors"
+    "copyright": "Copyright © 2026 TCM-Library-Search Contributors",
+    "windows": {
+      "wix": {
+        "language": "zh-CN"
+      },
+      "nsis": {
+        "languages": ["SimpChinese", "English"]
+      }
+    }
   },
   "plugins": {
     "updater": {
