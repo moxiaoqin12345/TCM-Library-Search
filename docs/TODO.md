@@ -53,9 +53,12 @@ Phase 5: 混合搜索优化与跨平台发布
 - [x] 宣纸仿古浅色与竹简深色护眼双主题切换系统
 - [x] 插图安全渲染、骨架屏容错与全屏灯箱模态层（Lightbox 支持滚轮缩放与拖拽）
 
-### Phase 5: 后续演进与发布运维 (待完成 / 下一步工作)
-- [ ] 书籍篇章目录树（Chapter Tree）：图书库选书后在中间面板展开该书的卷次/章节树，进行树状逐章点读
-- [ ] 本地书签与高亮批注持久化（LocalStorage / SQLite 存储用户标注与笔记）
-- [ ] 自动化 CI 工作流（GitHub Actions：cargo fmt, clippy, test 与 pnpm build）
-- [ ] 桌面端跨平台打包配置与自动化发布流水线（Windows 安装包 `.msi` / `.exe`，macOS `.dmg` 等）
-- [ ] 初始代码提交与 Git 仓库 Commit 归档
+### Phase 5: 后续演进与发布运维
+- [x] 书籍篇章目录树（Chapter Tree）：图书库选书后在中间面板展开该书的卷次/章节树，进行树状逐章点读
+- [x] 本地书签与高亮批注持久化（LocalStorage 存储用户标注、随记心得与阅读历史）
+- [x] 自动化 CI 工作流（GitHub Actions：cargo fmt, clippy, test 与 pnpm build）
+- [x] 初始代码提交与 Git 仓库规范化小粒度 Commit 归档
+- [ ] 本地开发运行与打包验证（Tauri Dev 运行调试、本地 Release 构建）
+- [ ] 典籍正文全文高亮检索（在原文中高亮当前搜索的关键词与症状）
+- [ ] 正文双击/划词词典释义弹窗（中医药专业术语速查）
+- [ ] 跨平台发布工作流（配置 Release 自动生成 Windows `.msi`/`.exe` 与 macOS 产物）
