@@ -3,6 +3,7 @@
 //! Pure Rust computation, indexing, and multi-dimensional clinical retrieval core
 //! for Traditional Chinese Medicine (TCM) classical and modern texts.
 
+pub mod compatibility;
 pub mod error;
 pub mod index;
 pub mod matcher;
@@ -10,6 +11,9 @@ pub mod models;
 pub mod parser;
 
 // Top-level unified exports
+pub use compatibility::{
+    check_herb_compatibility, CompatibilityAlert, IncompatibilitySeverity, IncompatibilityType,
+};
 pub use error::{CoreError, Result};
 pub use index::{locate_manifest_path, CorpusIndex};
 pub use matcher::search_corpus;
