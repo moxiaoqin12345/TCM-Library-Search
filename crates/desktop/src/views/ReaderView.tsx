@@ -5,8 +5,11 @@ import {
   onMount,
 } from "solid-js";
 import {
+  BookSummaryItem,
   CategoryTreeItem,
+  getBookChapters,
   getEntryDetail,
+  listBooks,
   listCategories,
   loadImageDataUri,
   searchEntries,
@@ -62,7 +65,7 @@ export default function ReaderView(props: ReaderViewProps) {
   >([]);
 
   // 图书馆书目数据（基于典籍体系）
-  const [books] = createSignal<BookInfo[]>([
+  const [books, setBooks] = createSignal<BookInfo[]>([
     {
       id: "yaodian_2025",
       title: "中国药典（2025年版）",
@@ -109,6 +112,8 @@ export default function ReaderView(props: ReaderViewProps) {
     },
   ]);
   const [selectedBookId, setSelectedBookId] = createSignal<string>("yaodian_2025");
+  // 当前正在点读的书籍章节树
+  const [activeBookTree, setActiveBookTree] = createSignal<BookSummaryItem | null>(null);
 
   // 插图图片缓存与灯箱
   const [imageMap, setImageMap] = createSignal<Record<string, string>>({});
@@ -118,7 +123,7 @@ export default function ReaderView(props: ReaderViewProps) {
     caption?: string;
   } | null>(null);
 
-  // 初始化加载分类与首批条目
+  // 初始化加载分类、首批条目与动态典籍列表
   onMount(async () => {
     try {
       const cats = await listCategories();
@@ -132,6 +137,67 @@ export default function ReaderView(props: ReaderViewProps) {
     } catch (e) {
       console.warn("Failed to load categories:", e);
     }
+
+    // 加载书目统计
+    try {
+      const rawBooks = await listBooks();
+      if (rawBooks.length > 0) {
+        const enrichedBooks: BookInfo[] = rawBooks.map((b) => {
+          let author = "历代医家";
+          let dynasty = "经典流传";
+          let coverColor = "linear-gradient(135deg, #4a7065, #3d5c53)";
+          let coverText = b.book_name.slice(0, 2);
+          let description = `收录 ${b.chapter_count} 篇卷，共 ${b.entry_count} 条经文`;
+          let category = "经典医籍";
+
+          if (b.book_name.includes("药典")) {
+            author = "国家药典委员会";
+            dynasty = "现代";
+            coverColor = "linear-gradient(135deg, #8b2515, #6b1b0f)";
+            coverText = "药典";
+            description = "国家法定标准，收录常用中药材饮片与制剂规范。";
+            category = "中药学";
+          } else if (b.book_name.includes("伤寒")) {
+            author = "张仲景";
+            dynasty = "东汉";
+            coverColor = "linear-gradient(135deg, #8b6914, #6b4f10)";
+            coverText = "伤寒";
+            description = "六经辨证之祖，奠定理法方药体系。";
+            category = "方剂学";
+          } else if (b.book_name.includes("素问") || b.book_name.includes("内经")) {
+            author = "先秦古圣";
+            dynasty = "先秦至汉";
+            coverColor = "linear-gradient(135deg, #357a8a, #285f6b)";
+            coverText = "内经";
+            description = "中医理论大宗，探寻阴阳天地造化。";
+            category = "经典医籍";
+          } else if (b.book_name.includes("针灸")) {
+            author = "历代经穴集成";
+            dynasty = "经典合编";
+            coverColor = "linear-gradient(135deg, #4a7065, #3d5c53)";
+            coverText = "针灸";
+            description = "经络走向与要穴经注要籍。";
+            category = "针灸推拿";
+          }
+
+          return {
+            id: b.book_name,
+            title: b.book_name,
+            author,
+            dynasty,
+            description,
+            category,
+            entryCount: b.entry_count,
+            coverColor,
+            coverText,
+          };
+        });
+        setBooks(enrichedBooks);
+      }
+    } catch (e) {
+      console.warn("Failed to load books dynamically:", e);
+    }
+
     // 首次自动检索
     doSearch("", undefined, undefined);
   });
@@ -229,19 +295,25 @@ export default function ReaderView(props: ReaderViewProps) {
     return bookmarks().some((b) => b.id === cur.metadata.id);
   };
 
-  // 按书籍筛选条目
-  const handleSelectBook = (bookId: string) => {
+  // 按书籍展开篇章目录树
+  const handleSelectBook = async (bookId: string) => {
     setSelectedBookId(bookId);
-    if (bookId === "shanghanlun") {
-      doSearch("桂枝汤", "fangji", undefined);
-    } else if (bookId === "neijing_suwen") {
-      doSearch("素问", "jingdian", undefined);
-    } else if (bookId === "zhenjiuxue") {
-      doSearch("足三里", "zhenjiu", undefined);
-    } else {
-      doSearch("", "zhongyao", undefined);
+    try {
+      const tree = await getBookChapters(bookId);
+      setActiveBookTree(tree);
+      // 若有条目，自动预选首条正文阅读
+      if (tree.chapters.length > 0 && tree.chapters[0].entries.length > 0) {
+        selectEntry(tree.chapters[0].entries[0].id);
+      }
+    } catch (e) {
+      console.warn("Failed to load book chapters:", e);
+      // 容错降级触发分类搜索
+      doSearch(bookId, undefined, undefined);
     }
-    setActiveNav("search");
+  };
+
+  const handleBackToBooks = () => {
+    setActiveBookTree(null);
   };
 
   const openLightbox = (src: string, title: string, caption?: string) => {
@@ -290,7 +362,11 @@ export default function ReaderView(props: ReaderViewProps) {
             categories={categories()}
             books={books()}
             selectedBookId={selectedBookId()}
+            activeBookTree={activeBookTree()}
+            selectedEntryId={selectedId()}
             onSelectBook={handleSelectBook}
+            onSelectEntry={(id) => selectEntry(id)}
+            onBackToBooks={handleBackToBooks}
             onFilterCategory={(cat) => doSearch("", cat || undefined, undefined)}
           />
         </Show>

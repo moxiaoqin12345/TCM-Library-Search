@@ -4,31 +4,32 @@
   height: 100%;
   background-color: var(--bg-surface);
   border-right: 1px solid var(--border-default);
+  overflow: hidden;
 }
 
 .header {
-  padding: 16px;
+  padding: 14px 16px;
   border-bottom: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 10px;
 }
 
 .title {
   margin: 0;
-  font-size: 18px;
-  font-weight: bold;
+  font-size: 1.05rem;
+  font-weight: 700;
   color: var(--text-primary);
-  font-family: serif;
+  font-family: var(--font-serif);
 }
 
 .filter {
-  padding: 8px 12px;
+  padding: 7px 10px;
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
   background-color: var(--bg-input);
   color: var(--text-primary);
-  font-size: 14px;
+  font-size: 0.82rem;
   outline: none;
   cursor: pointer;
 }
@@ -40,26 +41,27 @@
 .bookList {
   flex: 1;
   overflow-y: auto;
-  padding: 12px;
+  padding: 10px;
   display: flex;
   flex-direction: column;
-  gap: 12px;
+  gap: 8px;
 }
 
 .bookCard {
   display: flex;
-  padding: 12px;
+  padding: 10px;
   background-color: var(--bg-card);
   border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-lg);
+  border-radius: var(--radius-md);
   cursor: pointer;
-  transition: all 0.2s ease;
-  gap: 12px;
+  transition: all 0.15s ease;
+  gap: 10px;
 }
 
 .bookCard:hover {
   background-color: var(--bg-hover);
   border-color: var(--border-default);
+  transform: translateY(-1px);
 }
 
 .bookCard.active {
@@ -71,17 +73,18 @@
   width: 44px;
   height: 60px;
   min-width: 44px;
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   display: flex;
   align-items: center;
   justify-content: center;
-  color: white;
+  color: #fff;
   writing-mode: vertical-rl;
-  font-size: 14px;
+  font-size: 0.8rem;
   letter-spacing: 2px;
-  font-family: serif;
+  font-family: var(--font-serif);
   box-shadow: var(--shadow-sm);
-  text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.3);
+  font-weight: 700;
+  flex-shrink: 0;
 }
 
 .info {
@@ -89,56 +92,227 @@
   display: flex;
   flex-direction: column;
   overflow: hidden;
+  min-width: 0;
 }
 
 .bookHeader {
   display: flex;
   justify-content: space-between;
   align-items: baseline;
-  margin-bottom: 4px;
+  margin-bottom: 2px;
+  gap: 4px;
 }
 
 .bookTitle {
   margin: 0;
-  font-size: 16px;
-  font-weight: bold;
+  font-size: 0.92rem;
+  font-weight: 700;
   color: var(--text-primary);
-  font-family: serif;
+  font-family: var(--font-serif);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 }
 
 .entryCount {
-  font-size: 12px;
+  font-size: 0.72rem;
   color: var(--text-muted);
   white-space: nowrap;
 }
 
 .authorInfo {
-  font-size: 12px;
+  font-size: 0.72rem;
   color: var(--text-secondary);
-  margin-bottom: 4px;
-  font-family: serif;
+  margin-bottom: 3px;
 }
 
 .description {
-  margin: 0 0 8px 0;
-  font-size: 12px;
+  margin: 0 0 6px 0;
+  font-size: 0.75rem;
   color: var(--text-secondary);
   display: -webkit-box;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
   overflow: hidden;
-  line-height: 1.4;
+  line-height: 1.35;
 }
 
 .categoryBadge {
   align-self: flex-start;
-  font-size: 11px;
-  padding: 2px 6px;
+  font-size: 0.68rem;
+  padding: 1px 6px;
   background-color: var(--bg-subtle);
   color: var(--text-secondary);
-  border-radius: var(--radius-md);
+  border-radius: var(--radius-sm);
   border: 1px solid var(--border-subtle);
+}
+
+/* ================= 章节树导航视图样式 ================= */
+.chapterTreeContainer {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  overflow: hidden;
+}
+
+.treeHeader {
+  padding: 12px 14px;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.backBtn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: transparent;
+  border: none;
+  color: var(--accent-cinnabar);
+  cursor: pointer;
+  font-size: 0.8rem;
+  padding: 0;
+  font-weight: 600;
+  width: fit-content;
+}
+
+.backBtn:hover {
+  text-decoration: underline;
+}
+
+.selectedBookMeta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.treeBookTitle {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  font-family: var(--font-serif);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.treeBookStats {
+  font-size: 0.72rem;
+  color: var(--text-muted);
+}
+
+.chapterList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.chapterGroup {
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-md);
+  background-color: var(--bg-card);
+  overflow: hidden;
+  transition: border-color 0.15s ease;
+}
+
+.chapterGroup:hover {
+  border-color: var(--border-default);
+}
+
+.chapterHeader {
+  padding: 8px 12px;
+  background-color: var(--bg-subtle);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  user-select: none;
+  transition: background-color 0.15s ease;
+}
+
+.chapterHeader:hover {
+  background-color: var(--bg-hover);
+}
+
+.chapterTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+}
+
+.chapterArrow {
+  font-size: 0.7rem;
+  color: var(--text-muted);
+  transition: transform 0.15s ease;
+  display: inline-block;
+  width: 12px;
+  text-align: center;
+}
+
+.chapterName {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.chapterCount {
+  font-size: 0.68rem;
+  padding: 1px 5px;
+  border-radius: 10px;
+  background: var(--bg-surface);
+  color: var(--text-muted);
+  border: 1px solid var(--border-subtle);
+  white-space: nowrap;
+}
+
+.chapterEntries {
+  display: flex;
+  flex-direction: column;
+  padding: 4px 0;
+  background: var(--bg-card);
+}
+
+.chapterEntryItem {
+  padding: 6px 12px 6px 30px;
+  font-size: 0.8rem;
+  color: var(--text-secondary);
+  cursor: pointer;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  transition: all 0.12s ease;
+  user-select: none;
+  border-left: 3px solid transparent;
+}
+
+.chapterEntryItem:hover {
+  background-color: var(--bg-hover);
+  color: var(--text-primary);
+}
+
+.chapterEntryItemActive {
+  background-color: var(--accent-cinnabar-soft);
+  color: var(--accent-cinnabar);
+  border-left-color: var(--accent-cinnabar);
+  font-weight: 600;
+}
+
+.entryItemTitle {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.entrySubTag {
+  font-size: 0.65rem;
+  color: var(--text-muted);
 }

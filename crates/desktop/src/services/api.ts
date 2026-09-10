@@ -140,6 +140,36 @@ export async function getEntryDetail(id: string): Promise<TcmEntryDetail> {
   return invoke("get_entry_detail", { id });
 }
 
+export interface BookChapterEntryItem {
+  id: string;
+  title: string;
+  section_title: string;
+  weight: number;
+  category: string;
+  subcategory: string;
+}
+
+export interface BookChapterTreeItem {
+  chapter_name: string;
+  count: number;
+  entries: BookChapterEntryItem[];
+}
+
+export interface BookSummaryItem {
+  book_name: string;
+  entry_count: number;
+  chapter_count: number;
+  chapters: BookChapterTreeItem[];
+}
+
+export async function listBooks(): Promise<BookSummaryItem[]> {
+  return invoke("list_books");
+}
+
+export async function getBookChapters(book: string): Promise<BookSummaryItem> {
+  return invoke("get_book_chapters", { book });
+}
+
 export async function resolveImagePath(id: string, relativePath: string): Promise<string> {
   return invoke("resolve_image_path", { id, relativePath });
 }
