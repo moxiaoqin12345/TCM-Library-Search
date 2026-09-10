@@ -8,7 +8,16 @@
   background-color: var(--bg-app);
 }
 
-/* 中间面板容器 (Search / Library / Home / Bookmark / Settings) */
+/* 全宽主页研读门户容器 (独占 flex: 1，独立垂直滚动) */
+.homeFullContainer {
+  flex: 1;
+  height: 100%;
+  overflow-y: auto;
+  overflow-x: hidden;
+  background-color: var(--bg-app);
+}
+
+/* 中间面板容器 (Search / Library / Bookmark / Settings) */
 .middlePanelWrapper {
   width: 340px;
   min-width: 300px;

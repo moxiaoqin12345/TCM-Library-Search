@@ -60,7 +60,7 @@ interface ReaderViewProps {
 
 export default function ReaderView(props: ReaderViewProps) {
   // 导航状态
-  const [activeNav, setActiveNav] = createSignal<string>("search");
+  const [activeNav, setActiveNav] = createSignal<string>("home");
 
   // 典籍与检索数据状态
   const [categories, setCategories] = createSignal<CategoryTreeItem[]>([]);
@@ -414,6 +414,14 @@ export default function ReaderView(props: ReaderViewProps) {
     setLightboxImage({ src, title, caption });
   };
 
+  const handleOpenDiffFromHome = async () => {
+    if (!activeEntry()) {
+      const defaultId = items().length > 0 ? items()[0].id : "shanghanlun_001";
+      await selectEntry(defaultId);
+    }
+    setIsDiffModalOpen(true);
+  };
+
   return (
     <div class={styles.layoutContainer}>
       {/* 1. 左侧图标导航栏 */}
@@ -424,7 +432,34 @@ export default function ReaderView(props: ReaderViewProps) {
         currentTheme={currentTheme()}
       />
 
-      {/* 2. 经络穴位专用工作台（当 activeNav === 'meridian' 时独占主工作区） */}
+      {/* 2. 全宽主页研读门户（当 activeNav === 'home' 时独占主工作区） */}
+      <Show when={activeNav() === "home"}>
+        <div class={styles.homeFullContainer}>
+          <HomePanel
+            totalEntries={totalCount()}
+            totalCategories={categories().length}
+            totalBooks={books().length}
+            recentEntries={recentEntries()}
+            books={books()}
+            onSelectEntry={(id) => {
+              selectEntry(id);
+              setActiveNav("search");
+            }}
+            onSelectBook={(bookId) => {
+              handleSelectBook(bookId);
+              setActiveNav("library");
+            }}
+            onQuickSearch={(kw) => {
+              doSearch(kw, undefined, undefined);
+              setActiveNav("search");
+            }}
+            onOpenDiff={handleOpenDiffFromHome}
+            onNavigate={(nav) => setActiveNav(nav)}
+          />
+        </div>
+      </Show>
+
+      {/* 3. 经络穴位专用工作台（当 activeNav === 'meridian' 时独占主工作区） */}
       <Show when={activeNav() === "meridian"}>
         <div style={{ flex: 1, height: "100%", overflow: "hidden" }}>
           <MeridianPanel
@@ -440,22 +475,9 @@ export default function ReaderView(props: ReaderViewProps) {
         </div>
       </Show>
 
-      {/* 3. 中间常规面板（依据导航切换） */}
-      <Show when={activeNav() !== "meridian"}>
+      {/* 4. 常规双栏研读工作区（检索 / 书库 / 收藏 / 设置） */}
+      <Show when={activeNav() !== "home" && activeNav() !== "meridian"}>
         <div class={styles.middlePanelWrapper}>
-          <Show when={activeNav() === "home"}>
-            <HomePanel
-              totalEntries={totalCount()}
-              totalCategories={categories().length}
-              totalBooks={books().length}
-              recentEntries={recentEntries()}
-              onSelectEntry={(id) => {
-                selectEntry(id);
-                setActiveNav("search");
-              }}
-              onNavigate={(nav) => setActiveNav(nav)}
-            />
-          </Show>
 
           <Show when={activeNav() === "search"}>
             <SearchPanel
