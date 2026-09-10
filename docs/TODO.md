@@ -1,66 +1,120 @@
-# TCM-Library-Search 迭代路线图与开发任务清单 (TODO)
+# TCM-Library-Search 迭代路线图与开发任务清单 (ROADMAP & TODO)
 
-## 📌 阶段规划总览
+## 📌 演进里程碑总览 (Milestones Overview)
 
 ```text
-Phase 1: 工程初始化与规范确立 (当前阶段)
+Phase 1: 工程初始化与规范确立 (v0.1.0 基础设施) [COMPLETED]
    └── Submodule 挂载、工程目录、开发准则、图片规范确立
-Phase 2: Rust 纯内核算力与索引引擎
+Phase 2: Rust 纯内核算力与索引引擎 (v0.1.0 内核层) [COMPLETED]
    └── YAML Frontmatter 解析器、三层切分器、11维中医药倒排索引
-Phase 3: Tauri 宿主防腐层与安全资产服务
+Phase 3: Tauri 宿主防腐层与安全资产服务 (v0.1.0 宿主层) [COMPLETED]
    └── IPC Facade 接入、相对路径图片沙箱转换、CorpusManager 异步预热
-Phase 4: 桌面端现代阅读器与交互工作台
-   └── SolidJS 视图、宣纸/竹简双主题排版、11维胶囊检索、图谱灯箱
-Phase 5: 混合搜索优化与跨平台发布
-   └── 本地向量/RAG 预留、多端打包自动化 (Windows / macOS / Linux)
+Phase 4: 桌面端现代阅读器与交互工作台 (v0.1.0 交互层) [COMPLETED]
+   └── 56px Nav Rail 三栏交互、宣纸/暮竹双主题、下拉级联筛选、图谱灯箱
+Phase 5: 研读增强、本地持久化与跨平台发布 (v0.1.0 交付) [COMPLETED]
+   └── 篇章目录树、持久化书签与临床笔记、正文高亮、划词词典、Markdown导出、多平台CI/CD
+
+============================ 🚀 接下来重点演进阶段 ============================
+
+Phase 6: 中医配伍禁忌实时雷达与方剂辨析引擎 (Milestone M1) [COMPLETED]
+   └── 十八反/十九畏/妊娠用药禁忌知识库、实时配伍检测算法、临床警戒气泡与名家辨析
+Phase 7: 双篇典籍分屏异文互校与同方比对工作台 (Milestone M2) [COMPLETED]
+   └── 双窗分屏 (Split Screen)、并排同步滚动、异文/药味剂量差异精准标注 (Diff Engine)
+Phase 8: 十二经脉与特定腧穴循行矢量流注交互图谱 (Milestone M3) [COMPLETED]
+   └── 十二经脉气血流注图谱、五输穴/原穴/络穴/郄穴点选定位、经络图注联动研读
+Phase 9: 临床证候智能推导选方引擎 (Milestone M4) [NEXT]
+   └── 症状/舌苔/脉象多条件勾选、11维特异性命中率排行、经典理法方药条文溯源
+Phase 10: 本地化 RAG 智能中医药检索与问答增强 (Milestone M5)
+   └── 向量 Embedding 模块、本地离线向量库 (Qdrant/SQLite-Vector)、检索增强问答、古籍引证溯源
 ```
 
 ---
 
 ## 🎯 详细任务清单
 
-### Phase 1: 工程初始化与规范确立 (Completed)
-- [x] 配置根目录 `.gitignore` 与 Git 忽略策略
-- [x] 挂载 `https://github.com/moxiaoqin12345/12345.git` 为 `corpus/` Git Submodule
-- [x] 编撰完整的面向用户产品文档 `README.md`
-- [x] 编撰协作者行为与代码规范文档 `CONTRIBUTING.md`
-- [x] 制定 AI Agent 强制工程红线与架构隔离规则 `AGENTS.md`
-- [x] 输出技术架构分层文档 `docs/STRUCT.md`
-- [x] 制定多媒体插图安全加载与交互规范 `docs/IMAGE_SPEC.md`
-- [x] 确立核心 API 契约与 IPC 通信协议 `docs/API.md`
+### Phase 1 ~ Phase 5 (已全部完成交付并在 v0.1.0 发布)
+- [x] Submodule 挂载、工程目录、开发准则、图片规范确立
+- [x] Rust `crates/core` 纯内核算力、YAML 解析、11 维中医药临床匹配
+- [x] Tauri 桌面宿主防腐层与沙箱图片安全加载
+- [x] 56px Nav Rail 三栏沉浸式阅读工作台与下拉多级筛选器
+- [x] 典籍篇章目录树（Chapter Tree 折叠点读）
+- [x] 本地书签持久化与临床随记即时心得批注
+- [x] 典籍正文全文关键词与临床症状高亮
+- [x] 划词/双击中医药专业名词速查浮动卡片
+- [x] 单篇 Markdown 导出、收藏集锦导出与 JSON 数据全量备份/导入
+- [x] GitHub Actions 多平台自动化发布流水线（Windows / macOS Universal / Linux）
 
-### Phase 2: Rust 核心算力与索引库 (`crates/core`) (Completed)
-- [x] 创建 `Cargo.toml` Workspace 结构与 `crates/core` 包定义
-- [x] 实现 `parser` 模块：无损提取 Frontmatter 元数据与正文三层标记（原文/古注/白话）
-- [x] 实现 `markdown` 图片标签解析器（提取正文行内图片及其图注）
-- [x] 实现 `index` 模块：高效解析 `corpus/manifest.json` 与全字段内存倒排索引
-- [x] 实现 `matcher` 模块：11 维中医药临床复合条件过滤与特异性加权打分
-- [x] 编写核心单元测试（针对药性、方剂、经典条目的匹配与容错测试）
+---
 
-### Phase 3: Tauri 宿主防腐层 (`crates/desktop/src-tauri`) (Completed)
-- [x] 配置 Tauri v2 宿主环境与 Cargo 依赖
-- [x] 实现 `CorpusManager`：自动定位文库目录（开发环境相对路径与生产打包 Resource 路径）
-- [x] 实现安全图片 Asset Protocol / Handler：校验沙箱范围，防止 `../` 路径穿越
-- [x] 注册并实现 `search_entries`, `get_entry_detail`, `list_categories` 等 IPC 指令
+### Phase 6: 中医配伍禁忌实时雷达与方剂辨析引擎 (Milestone M1 · 已交付)
+- [x] **配伍禁忌核心规则库 (`crates/core/src/compatibility.rs`)**：
+  - 构建严谨的“十八反”（诸乌反贝母、半夏、白蔹、白及，诸参反五灵脂，藻戟遂芫俱战草等）结构化知识表。
+  - 构建“十九畏”（硫黄原是火中精，朴硝一见便相争；水银莫与砒霜见等）禁忌对照关系。
+  - 构建“妊娠慎用/禁用”中药标志表（巴豆、牵牛、附子、麝香等）。
+- [x] **配伍分析引擎与检测算法**：
+  - 支持从当前阅读条目（或用户自定义组方药味列表）中自动提取药味名称，并秒级进行两两禁忌碰撞匹配。
+  - 返回命中禁忌项、禁忌类型（反/畏/妊娠禁忌）、经典出处与风险说明。
+- [x] **Tauri IPC 命令导出**：
+  - 导出 `check_compatibility(herbs: Vec<String>) -> Vec<CompatibilityAlert>` 等 IPC 接口。
+- [x] **前端配伍雷达交互组件 (`CompatibilityRadar.tsx`)**：
+  - 在阅读方剂或本草条目时，若检出配伍风险，在右侧工具栏以朱砂色微光或安全气泡醒目提示。
+  - 展开卡片可查看配伍冲突详情及历代医家（如李时珍、张仲景）关于该禁忌配伍的考辩。
 
-### Phase 4: 桌面端现代阅读器与交互工作台 (`crates/desktop/src`) (Completed)
-- [x] 配置 Vite + SolidJS + TypeScript + CSS Modules 前端工程骨架
-- [x] 实现三栏式沉浸交互布局（Nav Rail + 中间多功能面板 + 右侧精读区）
-- [x] 下拉式多级筛选器取代滚动胶囊（分类联动、11维证治维度筛选、多模式排序）
-- [x] 典籍按书查阅（图书馆面板与书目卡片）
-- [x] 正文三层互文开关（独立切换【原文】/【古注】/【白话提要】）
-- [x] 字号与行距下拉调节（支持小到超大 5 档及紧凑/舒适/宽松）
-- [x] 宣纸仿古浅色与竹简深色护眼双主题切换系统
-- [x] 插图安全渲染、骨架屏容错与全屏灯箱模态层（Lightbox 支持滚轮缩放与拖拽）
+---
 
-### Phase 5: 后续演进与发布运维
-- [x] 书籍篇章目录树（Chapter Tree）：图书库选书后在中间面板展开该书的卷次/章节树，进行树状逐章点读
-- [x] 本地书签与高亮批注持久化（LocalStorage 存储用户标注、随记心得与阅读历史）
-- [x] 自动化 CI 工作流（GitHub Actions：cargo fmt, clippy, test 与 pnpm build）
-- [x] 初始代码提交与 Git 仓库规范化小粒度 Commit 归档
-- [x] 典籍正文全文高亮检索（在原文中高亮当前搜索的关键词与临床症状定位）
-- [x] 正文双击/划词词典释义弹窗（中医药专业术语速查与跨书目关联推导）
-- [x] 导出与备份（支持将研读心得、书签与古籍条目导出为 Markdown 或 JSON 备份及还原）
-- [x] 跨平台发布工作流（GitHub Actions Release 自动构建 Windows `.msi`/`.exe`、macOS `.dmg`）
-- [ ] 本地开发运行与打包验证（Tauri Dev 运行调试、本地打包生成安装包）
+### Phase 7: 双篇典籍分屏异文互校与同方比对工作台 (Milestone M2 · 已交付)
+- [x] **双栏工作台编排 (`DiffModal.tsx`)**：
+  - 支持左右两栏或上下两栏自由分屏，左侧可锁定基础本（如宋本《伤寒论》），右侧对照化裁本（如《金匮要略》或《千金方》）。
+- [x] **文本差异比对引擎 (`crates/core/src/diff.rs`)**：
+  - 在 Rust core 中实现面向古文语法的 LCS 差异对比与逐行/逐词变更检测算法。
+  - 前端高亮异文差异（药味增减、剂量变化、加减煎服法差异），支持 Split 对照与 Unified 紧凑视图切换。
+- [x] **预设版本一键载入与统计看板**：
+  - 内置经典版本（赵开美宋本 vs 桂林古本等）快速载入与增删改指标统计。
 
+---
+
+### Phase 8: 十二经脉与特定腧穴循行矢量流注交互图谱 (Milestone M3 · 已交付)
+- [x] **经络流注拓扑模型 (`crates/core/src/meridian.rs`)**：
+  - 梳理十二经脉流注次序（手太阴肺经 → 手阳明大肠经 → 足阳明胃经 → ...）。
+  - 整理各经特定要穴（五输穴、井荥输经合、原穴、络穴、郄穴、募穴、背俞穴）。
+  - 构建临床智能配穴推导算法（基于主治症状与证机匹配推荐要穴）。
+- [x] **交互式经络流注与腧穴定位面板 (`MeridianPanel.tsx`)**：
+  - 可视化呈现气血流注时辰、表里配属、阴阳走向与特定穴过滤。
+  - 包含临床症状即时搜穴（头痛、牙痛、胃脘痛、失眠等）智能推荐与针灸注意事项。
+
+---
+
+### Phase 8.5: 跨平台安全自动更新体系 (GitHub Releases Auto-Updater · 已交付)
+- [x] **Tauri v2 Auto-Updater 插件集成与 Minisign 密钥对生成**：
+  - 集成 `tauri-plugin-updater` 与 `@tauri-apps/plugin-updater`。
+  - 部署 Minisign 公私钥对签名机制，配置 `tauri.conf.json` 自动更新端点。
+  - CI/CD 自动打包并生成 `latest.json` 签名清单上传至 GitHub Releases。
+- [x] **典雅古韵更新模态框 (`UpdateModal.tsx`)**：
+  - 呈现新版本版本号、发布日期、更新日志（Changelog）与实时下载进度条。
+  - 一键安全重启生效（`app_restart` Facade）。
+- [x] **多入口 GUI 触发与版本标识**：
+  - 顶部标题栏（`TitleBar.tsx`）：当前版本号胶囊徽标与“🚀 检查更新”按钮。
+  - 设置面板（`SettingsPanel.tsx`）：独立“软件版本与在线更新”专区，显示上次检查时间与 Releases 通道状态。
+  - 主页研读门户（`HomePanel.tsx`）：底栏版本徽标与“🔄 检查更新”快捷按钮。
+
+---
+
+### Phase 9: 临床证候智能推导选方引擎 (Milestone M4)
+- [ ] **证候关联矩阵与加权评分算法**：
+  - 基于文库中 411+ 经典篇目的 11 维中医临床证治标签，建立“症状/舌苔/脉象 → 经典经方”概率矩阵。
+- [ ] **辨证推导助手界面 (`SyndromeDiagnosticPanel.tsx`)**：
+  - 提供多维度症状快速录入/勾选器（恶寒、发热、无汗、脉浮紧等）。
+  - 实时根据核心病机计算经方匹配度（如：桂枝汤 94%、麻黄汤 88%），并列出对应辨证条文眼。
+
+---
+
+### Phase 10: 本地化 RAG 智能中医药检索与问答增强 (Milestone M5)
+- [ ] **本地文本分块与向量化嵌入 (Embedding Pipeline)**：
+  - 针对典籍三层正文设计符合中医药语义的 Chunking 策略（保持条目完整性与原文不可篡改性）。
+  - 支持本地轻量 Embedding 模型或标准通用 API 接口。
+- [ ] **本地向量检索库集成**：
+  - 采用轻量嵌入式向量检索（如 SQLite-Vector 或纯内存 HNSW 索引）。
+  - 实现“关键词 BM25 + 向量语义检索”混合检索（Hybrid Search）。
+- [ ] **智能问答与经典引证溯源 (RAG Agent)**：
+  - 针对医家或读者的临床/学术问题，结合文库真实古籍条文进行生成。
+  - **强制溯源要求**：每一处观点必须精确附带古籍条文锚点（《黄帝内经》《伤寒论》《药典》出处）。

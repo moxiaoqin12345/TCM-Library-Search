@@ -177,3 +177,110 @@ export async function resolveImagePath(id: string, relativePath: string): Promis
 export async function loadImageDataUri(id: string, relativePath: string): Promise<string> {
   return invoke("load_image_data_uri", { id, relativePath });
 }
+
+export type IncompatibilitySeverity = "severe" | "warning" | "info";
+
+export type IncompatibilityType =
+  | "shiba_fan"
+  | "shijiu_wei"
+  | "renshen_jinji"
+  | "xiang_e";
+
+export interface CompatibilityAlert {
+  herb_a: string;
+  herb_b?: string | null;
+  incompatibility_type: IncompatibilityType;
+  severity: IncompatibilitySeverity;
+  source_rhyme: string;
+  explanation: string;
+}
+
+export async function checkHerbCompatibility(
+  herbs: string[]
+): Promise<CompatibilityAlert[]> {
+  return invoke("check_compatibility", { herbs });
+}
+
+export type DiffOp = "equal" | "delete" | "insert";
+
+export interface DiffChunk {
+  op: DiffOp;
+  text: string;
+}
+
+export interface TextDiffResult {
+  chunks: DiffChunk[];
+  text_a: string;
+  text_b: string;
+  similarity: number;
+  equal_chars: number;
+  deleted_chars: number;
+  inserted_chars: number;
+}
+
+export async function diffTextVersions(
+  textA: string,
+  textB: string
+): Promise<TextDiffResult> {
+  return invoke("diff_text_versions", { textA, textB });
+}
+
+export type MeridianCategory =
+  | "shou_san_yin"
+  | "shou_san_yang"
+  | "zu_san_yang"
+  | "zu_san_yin"
+  | "qi_jing_ba_mai";
+
+export type SpecificAcupointType =
+  | "wu_shu_xue"
+  | "yuan_xue"
+  | "luo_xue"
+  | "xi_xue"
+  | "bei_shu_xue"
+  | "mu_xue"
+  | "ba_hui_xue"
+  | "ba_mai_jiao_hui_xue"
+  | "xia_he_xue"
+  | "si_zong_xue"
+  | "normal";
+
+export interface AcupointInfo {
+  name: string;
+  code: string;
+  meridian_name: string;
+  location: string;
+  origin_classic: string;
+  specific_types: SpecificAcupointType[];
+  specific_tags: string[];
+  indications: string[];
+  manipulation: string;
+  flow_position: number;
+}
+
+export interface MeridianInfo {
+  name: string;
+  code: string;
+  category: MeridianCategory;
+  element: string;
+  paired_meridian: string;
+  peak_time: string;
+  course_description: string;
+  acupoints: AcupointInfo[];
+}
+
+export async function listMeridians(): Promise<MeridianInfo[]> {
+  return invoke("list_meridians");
+}
+
+export async function getAcupointDetail(
+  name: string
+): Promise<AcupointInfo | null> {
+  return invoke("get_acupoint_detail", { name });
+}
+
+export async function recommendAcupoints(
+  symptom: string
+): Promise<AcupointInfo[]> {
+  return invoke("recommend_acupoints", { symptom });
+}

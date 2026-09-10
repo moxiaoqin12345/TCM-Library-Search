@@ -25,6 +25,8 @@ crates/**/src-tauri/target/
 .env.local
 .env.*.local
 *.pem
+*.key
+tcm-key*
 
 # IDEs and Editors
 .vscode/*
