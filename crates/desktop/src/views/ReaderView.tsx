@@ -38,6 +38,7 @@ import { BookmarkPanel } from "../components/BookmarkPanel";
 import { SettingsPanel } from "../components/SettingsPanel";
 import { TermPopover } from "../components/TermPopover";
 import { CompatibilityRadar } from "../components/CompatibilityRadar";
+import { DiffModal } from "../components/DiffModal";
 import { highlightTcmKeywords } from "../utils/highlighter";
 import { exportEntryToMarkdown } from "../services/export";
 import {
@@ -149,6 +150,9 @@ export default function ReaderView(props: ReaderViewProps) {
 
   // 配伍禁忌实时雷达检测告警状态
   const [compatibilityAlerts, setCompatibilityAlerts] = createSignal<CompatibilityAlert[]>([]);
+
+  // 异文互校对比模态框显隐
+  const [isDiffModalOpen, setIsDiffModalOpen] = createSignal<boolean>(false);
 
   // 综合计算当前条目的所有临床聚焦词（用于正文自动高亮与定位）
   const activeHighlightKeywords = () => {
@@ -561,6 +565,16 @@ export default function ReaderView(props: ReaderViewProps) {
                 </button>
               </div>
 
+              {/* 古今异文互校对比 */}
+              <button
+                type="button"
+                class={styles.diffBtn}
+                onClick={() => setIsDiffModalOpen(true)}
+                title="开启古今不同刊本/传抄本异文互校分屏比对（如宋本、赵开美本、桂林古本、康治本）"
+              >
+                ⚖️ 异文互校
+              </button>
+
               {/* 导出当前条目 */}
               <button
                 type="button"
@@ -732,6 +746,14 @@ export default function ReaderView(props: ReaderViewProps) {
           title={lightboxImage()!.title}
           caption={lightboxImage()!.caption}
           onClose={() => setLightboxImage(null)}
+        />
+      </Show>
+
+      {/* 古今双篇典籍异文互校分屏比对模态窗 */}
+      <Show when={isDiffModalOpen() && activeEntry()}>
+        <DiffModal
+          currentEntry={activeEntry()!}
+          onClose={() => setIsDiffModalOpen(false)}
         />
       </Show>
     </div>

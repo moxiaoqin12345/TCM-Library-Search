@@ -200,3 +200,27 @@ export async function checkHerbCompatibility(
 ): Promise<CompatibilityAlert[]> {
   return invoke("check_compatibility", { herbs });
 }
+
+export type DiffOp = "equal" | "delete" | "insert";
+
+export interface DiffChunk {
+  op: DiffOp;
+  text: string;
+}
+
+export interface TextDiffResult {
+  chunks: DiffChunk[];
+  text_a: string;
+  text_b: string;
+  similarity: number;
+  equal_chars: number;
+  deleted_chars: number;
+  inserted_chars: number;
+}
+
+export async function diffTextVersions(
+  textA: string,
+  textB: string
+): Promise<TextDiffResult> {
+  return invoke("diff_text_versions", { textA, textB });
+}

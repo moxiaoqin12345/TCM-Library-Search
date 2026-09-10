@@ -159,6 +159,23 @@
   border-color: var(--accent-cinnabar);
 }
 
+.diffBtn {
+  padding: 3px 8px;
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--border-default);
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.diffBtn:hover {
+  background: var(--bg-hover);
+  color: #2b7a5a;
+  border-color: #2b7a5a;
+}
+
 .readerScroll {
   flex: 1;
   overflow-y: auto;
