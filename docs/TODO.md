@@ -61,6 +61,6 @@ Phase 5: 混合搜索优化与跨平台发布
 - [x] 典籍正文全文高亮检索（在原文中高亮当前搜索的关键词与临床症状定位）
 - [x] 正文双击/划词词典释义弹窗（中医药专业术语速查与跨书目关联推导）
 - [x] 导出与备份（支持将研读心得、书签与古籍条目导出为 Markdown 或 JSON 备份及还原）
+- [x] 跨平台发布工作流（GitHub Actions Release 自动构建 Windows `.msi`/`.exe`、macOS `.dmg`）
 - [ ] 本地开发运行与打包验证（Tauri Dev 运行调试、本地打包生成安装包）
-- [ ] 跨平台发布工作流（GitHub Actions Release 自动构建 Windows `.msi`/`.exe`、macOS `.dmg`）
 
