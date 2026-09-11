@@ -2,8 +2,16 @@ import { Component, For, Show, createSignal, onMount } from "solid-js";
 import {
   listMeridians,
   recommendAcupoints,
+  listAcupointPairs,
+  recommendAcupointPairs,
+  listAcupointsByRegion,
   AcupointInfo,
   MeridianInfo,
+  AcupointPairFormula,
+  SpecificAcupointType,
+  BodyRegion,
+  BodyAspect,
+  BodyLocation,
 } from "../services/api";
 import styles from "./MeridianPanel.module.css";
 
@@ -12,33 +20,86 @@ interface MeridianPanelProps {
   onSelectAcupoint?: (pointName: string) => void;
 }
 
+type MainTab = "meridians" | "pairs" | "body";
+type MeridianCategoryFilter = "all" | "shou_san_yin" | "shou_san_yang" | "zu_san_yang" | "zu_san_yin" | "qi_jing_ba_mai";
+type SpecificFilter = "all" | SpecificAcupointType;
+
 export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
   const [meridians, setMeridians] = createSignal<MeridianInfo[]>([]);
+  const [allPairs, setAllPairs] = createSignal<AcupointPairFormula[]>([]);
   const [selectedMeridian, setSelectedMeridian] = createSignal<MeridianInfo | null>(null);
   const [selectedPoint, setSelectedPoint] = createSignal<AcupointInfo | null>(null);
+  const [selectedPair, setSelectedPair] = createSignal<AcupointPairFormula | null>(null);
   const [isLoading, setIsLoading] = createSignal<boolean>(true);
+
+  // Tab 模式：经络穴位图谱 vs 经典对偶配穴 vs 人体部形总图
+  const [activeTab, setActiveTab] = createSignal<MainTab>("meridians");
+
+  // 人体部形总图状态
+  const [bodyAspect, setBodyAspect] = createSignal<BodyAspect>("anterior");
+  const [bodyRegion, setBodyRegion] = createSignal<BodyRegion | "all">("all");
+  const [regionalPoints, setRegionalPoints] = createSignal<[AcupointInfo, BodyLocation][]>([]);
+
+  // 筛选过滤
+  const [categoryFilter, setCategoryFilter] = createSignal<MeridianCategoryFilter>("all");
+  const [specificFilter, setSpecificFilter] = createSignal<SpecificFilter>("all");
 
   // 症状智能对穴推荐
   const [symptomInput, setSymptomInput] = createSignal<string>("");
   const [recommendedPoints, setRecommendedPoints] = createSignal<AcupointInfo[]>([]);
+  const [recommendedPairs, setRecommendedPairs] = createSignal<AcupointPairFormula[]>([]);
+
+  const loadRegionalPoints = async (region?: BodyRegion, aspect?: BodyAspect) => {
+    try {
+      const data = await listAcupointsByRegion(region, aspect);
+      setRegionalPoints(data);
+    } catch (e) {
+      console.error("Failed to load regional acupoints:", e);
+    }
+  };
 
   onMount(async () => {
     setIsLoading(true);
     try {
-      const data = await listMeridians();
-      setMeridians(data);
-      if (data.length > 0) {
-        setSelectedMeridian(data[0]);
-        if (data[0].acupoints.length > 0) {
-          setSelectedPoint(data[0].acupoints[0]);
+      const [meridianData, pairData, regData] = await Promise.all([
+        listMeridians(),
+        listAcupointPairs(),
+        listAcupointsByRegion(undefined, "anterior"),
+      ]);
+      setMeridians(meridianData);
+      setAllPairs(pairData);
+      setRegionalPoints(regData);
+
+      if (meridianData.length > 0) {
+        setSelectedMeridian(meridianData[0]);
+        if (meridianData[0].acupoints.length > 0) {
+          setSelectedPoint(meridianData[0].acupoints[0]);
         }
       }
+      if (pairData.length > 0) {
+        setSelectedPair(pairData[0]);
+      }
     } catch (e) {
-      console.error("Failed to load meridians:", e);
+      console.error("Failed to load meridian data:", e);
     } finally {
       setIsLoading(false);
     }
   });
+
+  const filteredMeridians = () => {
+    const list = meridians();
+    const cat = categoryFilter();
+    if (cat === "all") return list;
+    return list.filter((m) => m.category === cat);
+  };
+
+  const filteredAcupoints = () => {
+    const m = selectedMeridian();
+    if (!m) return [];
+    const filter = specificFilter();
+    if (filter === "all") return m.acupoints;
+    return m.acupoints.filter((pt) => pt.specific_types.includes(filter as SpecificAcupointType));
+  };
 
   const handleSelectMeridian = (m: MeridianInfo) => {
     setSelectedMeridian(m);
@@ -53,18 +114,26 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
     const sym = symptomInput().trim();
     if (!sym) {
       setRecommendedPoints([]);
+      setRecommendedPairs([]);
       return;
     }
     try {
-      const recs = await recommendAcupoints(sym);
-      setRecommendedPoints(recs);
+      const [pts, pairs] = await Promise.all([
+        recommendAcupoints(sym),
+        recommendAcupointPairs(sym),
+      ]);
+      setRecommendedPoints(pts);
+      setRecommendedPairs(pairs);
+      if (pairs.length > 0 && activeTab() === "pairs") {
+        setSelectedPair(pairs[0]);
+      }
     } catch (e) {
-      console.error("Failed to recommend acupoints:", e);
+      console.error("Failed to recommend acupoints & pairs:", e);
     }
   };
 
   const selectAcupointByName = (point: AcupointInfo) => {
-    // 切换到其归经
+    setActiveTab("meridians");
     const matchedMeridian = meridians().find((m) => m.name === point.meridian_name);
     if (matchedMeridian) {
       setSelectedMeridian(matchedMeridian);
@@ -72,12 +141,59 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
     setSelectedPoint(point);
   };
 
+  const selectPointByNameString = (name: string) => {
+    for (const m of meridians()) {
+      for (const pt of m.acupoints) {
+        if (pt.name === name) {
+          selectAcupointByName(pt);
+          return;
+        }
+      }
+    }
+    props.onSearchGlobal?.(name);
+  };
+
+  const getElementColor = (element: string) => {
+    if (element.includes("木")) return "#3d7a5a";
+    if (element.includes("火")) return "#c0392b";
+    if (element.includes("土")) return "#b57224";
+    if (element.includes("金")) return "#997300";
+    if (element.includes("水")) return "#2980b9";
+    if (element.includes("阳")) return "#d35400";
+    return "#5c544d";
+  };
+
   return (
     <div class={styles.container}>
-      {/* 1. 左侧经络导航栏 */}
+      {/* 1. 左侧导航与列表 */}
       <div class={styles.meridianListPane}>
-        <div class={styles.paneTitle}>
-          <span>十四经脉 · 气血流注</span>
+        {/* 顶部主切换 Tab */}
+        <div class={styles.mainTabs}>
+          <button
+            type="button"
+            class={`${styles.mainTabBtn} ${activeTab() === "meridians" ? styles.mainTabBtnActive : ""}`}
+            onClick={() => setActiveTab("meridians")}
+          >
+            十四经脉
+          </button>
+          <button
+            type="button"
+            class={`${styles.mainTabBtn} ${activeTab() === "pairs" ? styles.mainTabBtnActive : ""}`}
+            onClick={() => setActiveTab("pairs")}
+          >
+            经典配穴对方
+          </button>
+          <button
+            type="button"
+            class={`${styles.mainTabBtn} ${activeTab() === "body" ? styles.mainTabBtnActive : ""}`}
+            onClick={() => {
+              setActiveTab("body");
+              const reg = bodyRegion();
+              loadRegionalPoints(reg === "all" ? undefined : reg, bodyAspect());
+            }}
+          >
+            人体部形
+          </button>
         </div>
 
         {/* 临床辨证配穴速查搜索框 */}
@@ -85,7 +201,7 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
           <input
             type="text"
             class={styles.symptomInput}
-            placeholder="输病症 (如: 胃痛/失眠/头痛)..."
+            placeholder={activeTab() === "meridians" ? "输病症 (如: 胃痛/失眠/头痛)..." : "输病症搜对穴配方..."}
             value={symptomInput()}
             onInput={(e) => setSymptomInput(e.currentTarget.value)}
             onKeyDown={(e) => {
@@ -103,140 +219,426 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
         </div>
 
         {/* 智能对偶配穴推荐展示 */}
-        <Show when={recommendedPoints().length > 0}>
+        <Show when={recommendedPoints().length > 0 || recommendedPairs().length > 0}>
           <div class={styles.recommendSection}>
             <div class={styles.recommendHeader}>
-              <span>🎯 临床推荐主穴 ({recommendedPoints().length})</span>
+              <span>
+                🎯 推荐结果 ({activeTab() === "meridians" ? recommendedPoints().length : recommendedPairs().length})
+              </span>
               <button
                 type="button"
                 class={styles.clearBtn}
-                onClick={() => setRecommendedPoints([])}
+                onClick={() => {
+                  setRecommendedPoints([]);
+                  setRecommendedPairs([]);
+                }}
               >
                 ✕
               </button>
             </div>
-            <div class={styles.recommendChips}>
-              <For each={recommendedPoints()}>
-                {(pt) => (
-                  <button
-                    type="button"
-                    class={styles.recommendChip}
-                    onClick={() => selectAcupointByName(pt)}
-                    title={`所属：${pt.meridian_name} | 主治：${pt.indications.join("、")}`}
-                  >
-                    <span class={styles.recName}>{pt.name}</span>
-                    <span class={styles.recCode}>({pt.code})</span>
-                  </button>
-                )}
-              </For>
-            </div>
+
+            <Show when={activeTab() === "meridians" && recommendedPoints().length > 0}>
+              <div class={styles.recommendChips}>
+                <For each={recommendedPoints()}>
+                  {(pt) => (
+                    <button
+                      type="button"
+                      class={styles.recommendChip}
+                      onClick={() => selectAcupointByName(pt)}
+                      title={`所属：${pt.meridian_name} | 主治：${pt.indications.join("、")}`}
+                    >
+                      <span class={styles.recName}>{pt.name}</span>
+                      <span class={styles.recCode}>({pt.code})</span>
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
+
+            <Show when={activeTab() === "pairs" && recommendedPairs().length > 0}>
+              <div class={styles.recommendChips}>
+                <For each={recommendedPairs()}>
+                  {(p) => (
+                    <button
+                      type="button"
+                      class={styles.recommendChip}
+                      onClick={() => setSelectedPair(p)}
+                      title={`功效：${p.efficacy}`}
+                    >
+                      <span class={styles.recName}>{p.name}</span>
+                      <span class={styles.recCode}>[{p.points.join("+")}]</span>
+                    </button>
+                  )}
+                </For>
+              </div>
+            </Show>
           </div>
         </Show>
 
+        {/* 经脉模式下的类别切换 */}
+        <Show when={activeTab() === "meridians"}>
+          <div class={styles.categoryFilterBar}>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "all" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("all")}
+            >
+              全部
+            </button>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "shou_san_yin" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("shou_san_yin")}
+            >
+              手三阴
+            </button>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "shou_san_yang" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("shou_san_yang")}
+            >
+              手三阳
+            </button>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "zu_san_yang" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("zu_san_yang")}
+            >
+              足三阳
+            </button>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "zu_san_yin" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("zu_san_yin")}
+            >
+              足三阴
+            </button>
+            <button
+              type="button"
+              class={`${styles.catFilterPill} ${categoryFilter() === "qi_jing_ba_mai" ? styles.catFilterActive : ""}`}
+              onClick={() => setCategoryFilter("qi_jing_ba_mai")}
+            >
+              奇经
+            </button>
+          </div>
+        </Show>
+
+        {/* 列表渲染：经络模式 vs 对穴模式 */}
         <div class={styles.meridianScroll}>
           <Show when={isLoading()}>
-            <div class={styles.loadingTip}>正在载入经络图谱数据...</div>
+            <div class={styles.loadingTip}>正在载入经络图谱与对穴数据库...</div>
           </Show>
-          <For each={meridians()}>
-            {(m) => {
-              const isSelected = selectedMeridian()?.code === m.code;
-              return (
-                <div
-                  class={`${styles.meridianCard} ${
-                    isSelected ? styles.meridianCardActive : ""
-                  }`}
-                  onClick={() => handleSelectMeridian(m)}
-                >
-                  <div class={styles.cardMain}>
-                    <span class={styles.meridianName}>{m.name}</span>
-                    <span class={styles.meridianCode}>{m.code}</span>
+
+          {/* 经脉列表 */}
+          <Show when={activeTab() === "meridians"}>
+            <For each={filteredMeridians()}>
+              {(m) => {
+                const isSelected = selectedMeridian()?.code === m.code;
+                return (
+                  <div
+                    class={`${styles.meridianCard} ${isSelected ? styles.meridianCardActive : ""}`}
+                    onClick={() => handleSelectMeridian(m)}
+                  >
+                    <div class={styles.cardMain}>
+                      <span class={styles.meridianName}>{m.name}</span>
+                      <span class={styles.meridianCode}>{m.code}</span>
+                    </div>
+                    <div class={styles.cardSub}>
+                      <span
+                        class={styles.elementTag}
+                        style={{ "border-left": `3px solid ${getElementColor(m.element)}` }}
+                      >
+                        {m.element}
+                      </span>
+                      <span class={styles.peakTimeTag}>{m.peak_time.split(" ")[0]}</span>
+                      <span class={styles.pointCountTag}>{m.acupoints.length} 穴</span>
+                    </div>
                   </div>
-                  <div class={styles.cardSub}>
-                    <span class={styles.elementTag}>五行属{m.element}</span>
-                    <span class={styles.peakTimeTag}>{m.peak_time.split(" ")[0]}</span>
-                    <span class={styles.pointCountTag}>{m.acupoints.length} 要穴</span>
+                );
+              }}
+            </For>
+          </Show>
+
+          {/* 经典配穴对方列表 */}
+          <Show when={activeTab() === "pairs"}>
+            <For each={allPairs()}>
+              {(pair) => {
+                const isSelected = selectedPair()?.name === pair.name;
+                return (
+                  <div
+                    class={`${styles.pairListCard} ${isSelected ? styles.pairListCardActive : ""}`}
+                    onClick={() => setSelectedPair(pair)}
+                  >
+                    <div class={styles.pairListTop}>
+                      <span class={styles.pairListName}>{pair.name}</span>
+                      <span class={styles.pairPrincipleBadge}>
+                        {pair.principle === "yuan_luo" && "原络配穴"}
+                        {pair.principle === "shu_mu" && "俞募配穴"}
+                        {pair.principle === "ba_mai_jiao_hui" && "八脉交会"}
+                        {pair.principle === "biao_li" && "表里经配穴"}
+                        {pair.principle === "tong_ming" && "同名经配穴"}
+                        {pair.principle === "ju_bu_yuan_duan" && "局部远端配穴"}
+                      </span>
+                    </div>
+                    <div class={styles.pairPointsTagRow}>
+                      <For each={pair.points}>
+                        {(pt) => <span class={styles.pairPointTag}>{pt}</span>}
+                      </For>
+                    </div>
+                    <div class={styles.pairEfficacySnippet}>{pair.efficacy}</div>
                   </div>
-                </div>
-              );
-            }}
-          </For>
+                );
+              }}
+            </For>
+          </Show>
+
+          {/* 人体部形穴位列表 */}
+          <Show when={activeTab() === "body"}>
+            <div style={{ padding: "0.5rem 0.8rem 0.3rem", "font-size": "0.78rem", color: "var(--text-muted)", "border-bottom": "1px solid var(--border-subtle)", display: "flex", "justify-content": "space-between" }}>
+              <span>当前部形腧穴</span>
+              <span>{regionalPoints().length} 穴</span>
+            </div>
+            <For each={regionalPoints()}>
+              {([pt, loc]) => {
+                const isSelected = selectedPoint()?.code === pt.code;
+                return (
+                  <div
+                    class={`${styles.pairListCard} ${isSelected ? styles.pairListCardActive : ""}`}
+                    onClick={() => setSelectedPoint(pt)}
+                  >
+                    <div class={styles.pairListTop}>
+                      <span class={styles.pairListName}>{pt.name}</span>
+                      <span class={styles.ptCode}>{pt.code}</span>
+                    </div>
+                    <div style={{ "font-size": "0.74rem", color: "var(--accent-cinnabar)", "margin-top": "0.2rem" }}>
+                      {pt.meridian_name} · {loc.region}
+                    </div>
+                    <div class={styles.tagChips} style={{ "margin-top": "0.3rem" }}>
+                      <For each={pt.specific_tags}>
+                        {(tag) => <span class={styles.tagChip}>{tag}</span>}
+                      </For>
+                    </div>
+                  </div>
+                );
+              }}
+            </For>
+          </Show>
         </div>
       </div>
 
-      {/* 2. 中间：经脉循行拓扑图解与交互穴位链 */}
-      <div class={styles.flowMapPane}>
-        <Show when={selectedMeridian()}>
+      {/* 2. 中间展示区：经脉循行拓扑图解 OR 对穴深研 */}
+      <Show when={activeTab() !== "body"}>
+        <div class={styles.flowMapPane}>
+        {/* 经络详情模式 */}
+        <Show when={activeTab() === "meridians" && selectedMeridian()}>
           <div class={styles.mapHeader}>
             <div class={styles.mapTitleGroup}>
-              <h3 class={styles.mapTitle}>
-                {selectedMeridian()!.name}（{selectedMeridian()!.code}）
-              </h3>
+              <div class={styles.titleRow}>
+                <h3 class={styles.mapTitle}>
+                  {selectedMeridian()!.name}（{selectedMeridian()!.code}）
+                </h3>
+                <span
+                  class={styles.elementBadge}
+                  style={{ background: getElementColor(selectedMeridian()!.element) }}
+                >
+                  五行属{selectedMeridian()!.element}
+                </span>
+              </div>
               <div class={styles.mapMeta}>
-                <span>表里经：{selectedMeridian()!.paired_meridian}</span>
-                <span>子午流注：{selectedMeridian()!.peak_time}</span>
+                <span>表里经络：<strong>{selectedMeridian()!.paired_meridian}</strong></span>
+                <span>子午流注时辰：<strong>{selectedMeridian()!.peak_time}</strong></span>
               </div>
             </div>
           </div>
 
           <div class={styles.courseBox}>
-            <span class={styles.courseTag}>【经脉循行】</span>
+            <span class={styles.courseTag}>【经脉循行走向与病候】</span>
             <p class={styles.courseText}>
               {selectedMeridian()!.course_description}
             </p>
           </div>
 
-          {/* 经络流注拓扑线管与交互穴位节点 */}
+          {/* 交互式经脉循行拓扑图 (SVG dynamic vector) */}
           <div class={styles.flowRailSection}>
-            <div class={styles.flowRailTitle}>
-              <span>经气循行流注脉络（点击穴位节点定位精解）</span>
+            <div class={styles.flowRailHeader}>
+              <span class={styles.flowRailTitle}>经气流注矢量拓扑图（点击节点查看定位）</span>
+              <span class={styles.flowRailSub}>
+                流注方向：始于 {selectedMeridian()!.acupoints[0]?.name || ""} ➔ 止于{" "}
+                {selectedMeridian()!.acupoints[selectedMeridian()!.acupoints.length - 1]?.name || ""}
+              </span>
             </div>
 
-            <div class={styles.flowCanvas}>
-              {/* 经络主干线 */}
-              <div class={styles.railLine} />
+            <div class={styles.svgFlowContainer}>
+              <svg class={styles.svgCanvas} viewBox="0 0 760 120" preserveAspectRatio="none">
+                <defs>
+                  <linearGradient id="meridianGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stop-color={getElementColor(selectedMeridian()!.element)} stop-opacity="0.3" />
+                    <stop offset="50%" stop-color={getElementColor(selectedMeridian()!.element)} stop-opacity="0.9" />
+                    <stop offset="100%" stop-color={getElementColor(selectedMeridian()!.element)} stop-opacity="0.4" />
+                  </linearGradient>
+                  <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                  </filter>
+                </defs>
 
-              {/* 循行节点 */}
-              <div class={styles.nodesTrack}>
+                {/* 背景底轨 */}
+                <path
+                  d="M 30 60 Q 190 20, 380 60 T 730 60"
+                  fill="none"
+                  stroke="var(--border-default)"
+                  stroke-width="6"
+                  stroke-linecap="round"
+                />
+
+                {/* 经气脉冲流注主动态光轨 */}
+                <path
+                  d="M 30 60 Q 190 20, 380 60 T 730 60"
+                  fill="none"
+                  stroke="url(#meridianGrad)"
+                  stroke-width="4"
+                  stroke-linecap="round"
+                  class={styles.svgPulseFlow}
+                />
+
+                {/* 交互穴位节点 */}
                 <For each={selectedMeridian()!.acupoints}>
-                  {(point, idx) => {
+                  {(point) => {
                     const isSelected = selectedPoint()?.code === point.code;
+                    // 根据 flow_position 计算贝塞尔曲线上近似坐标
+                    const pos = point.flow_position; // 0.05 ~ 0.95
+                    const cx = 30 + pos * 700;
+                    // y 轴波浪波动计算: y = 60 - 40 * sin(pos * PI)
+                    const cy = 60 - Math.sin(pos * Math.PI) * 28;
+                    const elemColor = getElementColor(selectedMeridian()!.element);
+
                     return (
-                      <div
-                        class={`${styles.flowNodeBox} ${
-                          isSelected ? styles.flowNodeActive : ""
-                        }`}
-                        style={{
-                          left: `${point.flow_position * 88 + 6}%`,
-                        }}
+                      <g
+                        class={`${styles.svgNodeGroup} ${isSelected ? styles.svgNodeActive : ""}`}
                         onClick={() => setSelectedPoint(point)}
-                        title={`${point.name} (${point.code}) - ${point.specific_tags.join("、")}`}
                       >
-                        <div class={styles.nodePulse} />
-                        <div class={styles.nodeDot}>{idx() + 1}</div>
-                        <div class={styles.nodeLabel}>
-                          <span class={styles.nodeName}>{point.name}</span>
-                          <span class={styles.nodeCode}>{point.code}</span>
-                        </div>
-                      </div>
+                        {/* 扩散光晕圆圈 (选定时) */}
+                        <Show when={isSelected}>
+                          <circle
+                            cx={cx}
+                            cy={cy}
+                            r="16"
+                            fill={elemColor}
+                            fill-opacity="0.25"
+                            class={styles.svgHalo}
+                          />
+                        </Show>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r={isSelected ? "10" : "7"}
+                          fill={isSelected ? elemColor : "var(--bg-card)"}
+                          stroke={elemColor}
+                          stroke-width="2.5"
+                          filter={isSelected ? "url(#glow)" : undefined}
+                          class={styles.svgCircle}
+                        />
+                        <text
+                          x={cx}
+                          y={cy - 14}
+                          text-anchor="middle"
+                          class={styles.svgNodeText}
+                          fill={isSelected ? elemColor : "var(--text-primary)"}
+                          font-weight={isSelected ? "bold" : "normal"}
+                        >
+                          {point.name}
+                        </text>
+                        <text
+                          x={cx}
+                          y={cy + 18}
+                          text-anchor="middle"
+                          class={styles.svgCodeText}
+                          fill="var(--text-muted)"
+                        >
+                          {point.code}
+                        </text>
+                      </g>
                     );
                   }}
                 </For>
-              </div>
+              </svg>
+            </div>
+          </div>
+
+          {/* 特定穴过滤标签组 */}
+          <div class={styles.specificFilterSection}>
+            <div class={styles.specificFilterTitle}>
+              <span>特定穴位过滤矩阵：</span>
+            </div>
+            <div class={styles.filterPills}>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "all" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("all")}
+              >
+                全部 ({selectedMeridian()!.acupoints.length})
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "wu_shu_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("wu_shu_xue")}
+              >
+                五输穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "yuan_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("yuan_xue")}
+              >
+                原穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "luo_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("luo_xue")}
+              >
+                络穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "xi_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("xi_xue")}
+              >
+                郄穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "bei_shu_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("bei_shu_xue")}
+              >
+                背俞穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "mu_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("mu_xue")}
+              >
+                募穴
+              </button>
+              <button
+                type="button"
+                class={`${styles.filterPill} ${specificFilter() === "ba_mai_jiao_hui_xue" ? styles.filterPillActive : ""}`}
+                onClick={() => setSpecificFilter("ba_mai_jiao_hui_xue")}
+              >
+                八脉交会穴
+              </button>
             </div>
           </div>
 
           {/* 穴位列表矩阵 */}
           <div class={styles.acupointGridSection}>
-            <div class={styles.gridTitle}>重点穴位明细</div>
             <div class={styles.acupointGrid}>
-              <For each={selectedMeridian()!.acupoints}>
+              <For each={filteredAcupoints()}>
                 {(pt) => {
                   const isSelected = selectedPoint()?.code === pt.code;
                   return (
                     <div
-                      class={`${styles.gridCard} ${
-                        isSelected ? styles.gridCardActive : ""
-                      }`}
+                      class={`${styles.gridCard} ${isSelected ? styles.gridCardActive : ""}`}
                       onClick={() => setSelectedPoint(pt)}
                     >
                       <div class={styles.gridCardTop}>
@@ -255,7 +657,279 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
             </div>
           </div>
         </Show>
+
+        {/* 经典对穴展示模式 */}
+        <Show when={activeTab() === "pairs" && selectedPair()}>
+          <div class={styles.pairDetailContainer}>
+            <div class={styles.pairDetailHeader}>
+              <div class={styles.pairNameRow}>
+                <h3 class={styles.pairMainTitle}>{selectedPair()!.name}</h3>
+                <span class={styles.pairPrincipleFullTag}>
+                  {selectedPair()!.principle === "yuan_luo" && "【原络配穴法】主病与表里同治"}
+                  {selectedPair()!.principle === "shu_mu" && "【俞募配穴法】阴阳互济·脏腑通调"}
+                  {selectedPair()!.principle === "ba_mai_jiao_hui" && "【八脉交会穴】通奇经八脉与十二正经"}
+                  {selectedPair()!.principle === "biao_li" && "【表里经配穴法】阴阳升降相因"}
+                  {selectedPair()!.principle === "tong_ming" && "【同名经配穴法】手足同气相求"}
+                  {selectedPair()!.principle === "ju_bu_yuan_duan" && "【远近配穴法】通经引气循经求源"}
+                </span>
+              </div>
+              <p class={styles.pairEfficacyHeader}>{selectedPair()!.efficacy}</p>
+            </div>
+
+            {/* 对穴组成穴位交互卡片 */}
+            <div class={styles.pairPointsCardsRow}>
+              <For each={selectedPair()!.points}>
+                {(pointName) => (
+                  <div
+                    class={styles.pairAcupointActionCard}
+                    onClick={() => selectPointByNameString(pointName)}
+                    title="点击跳转并定位此穴位循行解剖与详细辨析"
+                  >
+                    <div class={styles.pairPtCardHeader}>
+                      <span class={styles.pairPtIcon}>📍</span>
+                      <span class={styles.pairPtName}>{pointName}</span>
+                    </div>
+                    <span class={styles.pairPtActionTip}>查看穴位归经与解剖 ➔</span>
+                  </div>
+                )}
+              </For>
+            </div>
+
+            {/* 临床配伍机理深度剖析 */}
+            <div class={styles.pairMechanismBox}>
+              <div class={styles.mechanismTitle}>
+                <span>💡 临床配伍机理辨析</span>
+              </div>
+              <div class={styles.mechanismContent}>
+                {selectedPair()!.mechanism}
+              </div>
+            </div>
+
+            {/* 历代典籍出处考据 */}
+            <div class={styles.pairClassicBox}>
+              <div class={styles.classicBoxHeader}>
+                <span>📜 经典古籍文献溯源</span>
+              </div>
+              <div class={styles.classicBoxQuote}>
+                {selectedPair()!.origin_classic}
+              </div>
+            </div>
+
+            {/* 临床主治病证 */}
+            <div class={styles.pairIndicationsBox}>
+              <div class={styles.indicationsBoxHeader}>
+                <span>🩺 主治证候（点击在典籍库中检索）</span>
+              </div>
+              <div class={styles.pairIndicationsList}>
+                <For each={selectedPair()!.indications}>
+                  {(ind) => (
+                    <button
+                      type="button"
+                      class={styles.pairIndicationBtn}
+                      onClick={() => props.onSearchGlobal?.(ind)}
+                    >
+                      {ind} 🔍
+                    </button>
+                  )}
+                </For>
+              </div>
+            </div>
+          </div>
+        </Show>
       </div>
+      </Show>
+
+      {/* 人体部形 2D 交互总图 */}
+      <Show when={activeTab() === "body"}>
+        <div class={styles.bodyMapPane}>
+          <div class={styles.bodyMapTopBar}>
+            <div class={styles.aspectToggleGroup}>
+              <button
+                type="button"
+                class={`${styles.aspectToggleBtn} ${bodyAspect() === "anterior" ? styles.aspectToggleBtnActive : ""}`}
+                onClick={() => {
+                  setBodyAspect("anterior");
+                  if (bodyRegion() === "back_waist") setBodyRegion("chest_abdomen");
+                  const reg = bodyRegion();
+                  loadRegionalPoints(reg === "all" ? undefined : reg, "anterior");
+                }}
+              >
+                正面 (Anterior)
+              </button>
+              <button
+                type="button"
+                class={`${styles.aspectToggleBtn} ${bodyAspect() === "posterior" ? styles.aspectToggleBtnActive : ""}`}
+                onClick={() => {
+                  setBodyAspect("posterior");
+                  if (bodyRegion() === "chest_abdomen") setBodyRegion("back_waist");
+                  const reg = bodyRegion();
+                  loadRegionalPoints(reg === "all" ? undefined : reg, "posterior");
+                }}
+              >
+                背面 (Posterior)
+              </button>
+            </div>
+
+            <div class={styles.regionPillsRow}>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "all" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("all");
+                  loadRegionalPoints(undefined, bodyAspect());
+                }}
+              >
+                全部部位 ({regionalPoints().length})
+              </button>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "head_neck" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("head_neck");
+                  loadRegionalPoints("head_neck", bodyAspect());
+                }}
+              >
+                头面项部
+              </button>
+              <Show when={bodyAspect() === "anterior"}>
+                <button
+                  type="button"
+                  class={`${styles.regionPillBtn} ${bodyRegion() === "chest_abdomen" ? styles.regionPillBtnActive : ""}`}
+                  onClick={() => {
+                    setBodyRegion("chest_abdomen");
+                    loadRegionalPoints("chest_abdomen", "anterior");
+                  }}
+                >
+                  胸腹部
+                </button>
+              </Show>
+              <Show when={bodyAspect() === "posterior"}>
+                <button
+                  type="button"
+                  class={`${styles.regionPillBtn} ${bodyRegion() === "back_waist" ? styles.regionPillBtnActive : ""}`}
+                  onClick={() => {
+                    setBodyRegion("back_waist");
+                    loadRegionalPoints("back_waist", "posterior");
+                  }}
+                >
+                  腰背部
+                </button>
+              </Show>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "upper_limb" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("upper_limb");
+                  loadRegionalPoints("upper_limb", bodyAspect());
+                }}
+              >
+                上肢部
+              </button>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "lower_limb" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("lower_limb");
+                  loadRegionalPoints("lower_limb", bodyAspect());
+                }}
+              >
+                下肢部
+              </button>
+            </div>
+          </div>
+
+          <div class={styles.bodyCanvasWrapper}>
+            <svg class={styles.bodySvg} viewBox="0 0 500 850">
+              <defs>
+                <radialGradient id="bodySkin" cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="var(--bg-card)" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="var(--bg-subtle)" stop-opacity="0.7" />
+                </radialGradient>
+                <filter id="pointPulse" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              {/* 人体剪影底模 (Classical Anatomical Silhouette) */}
+              <g stroke="var(--border-default)" stroke-width="1.8" fill="url(#bodySkin)">
+                {/* 头部与项部 */}
+                <ellipse cx="250" cy="80" rx="42" ry="52" />
+                {/* 躯干与四肢 */}
+                <path d="M 232 128 L 232 152 Q 210 158 190 175 L 140 230 Q 130 242 125 270 L 110 370 Q 105 385 100 420 L 96 440 Q 94 450 102 452 Q 108 452 112 442 L 125 390 L 138 320 Q 148 260 168 220 L 195 200 L 195 380 Q 195 440 205 465 L 185 620 Q 180 700 182 780 L 175 805 Q 175 815 186 816 Q 198 816 200 802 L 210 740 L 220 620 L 240 485 L 250 480 L 260 485 L 280 620 L 290 740 L 300 802 Q 302 816 314 816 Q 325 815 325 805 L 318 780 Q 320 700 315 620 L 295 465 Q 305 440 305 380 L 305 200 L 332 220 Q 352 260 362 320 L 375 390 L 388 442 Q 392 452 398 452 Q 406 450 404 440 L 400 420 Q 395 385 390 370 L 375 270 Q 370 242 360 230 L 310 175 Q 290 158 268 152 L 268 128 Z" />
+              </g>
+
+              {/* 中轴经脉参考线：正面为任脉，背面为督脉与脊柱 */}
+              <line
+                x1="250"
+                y1={bodyAspect() === "anterior" ? "130" : "70"}
+                x2="250"
+                y2="475"
+                stroke="var(--accent-cinnabar)"
+                stroke-width="1.2"
+                stroke-dasharray="4 4"
+                stroke-opacity="0.6"
+              />
+              <text x="254" y="145" font-size="10" fill="var(--accent-cinnabar)" opacity="0.8">
+                {bodyAspect() === "anterior" ? "任脉中轴" : "督脉脊柱中轴"}
+              </text>
+
+              {/* 穴位矢量标定点 */}
+              <For each={regionalPoints()}>
+                {([pt, loc]) => {
+                  const cx = loc.coords[0] * 500;
+                  const cy = loc.coords[1] * 850;
+                  const isSelected = selectedPoint()?.code === pt.code;
+                  const isLeft = cx <= 250;
+
+                  return (
+                    <g
+                      class={`${styles.bodyPointGroup} ${isSelected ? styles.bodyPointActive : ""}`}
+                      onClick={() => setSelectedPoint(pt)}
+                    >
+                      <Show when={isSelected}>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r="14"
+                          fill="var(--accent-cinnabar)"
+                          fill-opacity="0.3"
+                          filter="url(#pointPulse)"
+                        />
+                      </Show>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={isSelected ? "7" : "4.5"}
+                        fill={isSelected ? "var(--accent-cinnabar)" : "var(--bg-card)"}
+                        stroke="var(--accent-cinnabar)"
+                        stroke-width={isSelected ? "2.5" : "1.8"}
+                        class={styles.bodyPointCircle}
+                      />
+                      <text
+                        x={isLeft ? cx - 8 : cx + 8}
+                        y={cy + 3}
+                        text-anchor={isLeft ? "end" : "start"}
+                        class={styles.bodyPointLabel}
+                      >
+                        {pt.name}
+                      </text>
+                      <text
+                        x={isLeft ? cx - 8 : cx + 8}
+                        y={cy + 13}
+                        text-anchor={isLeft ? "end" : "start"}
+                        class={styles.bodyPointCode}
+                      >
+                        {pt.code}
+                      </text>
+                    </g>
+                  );
+                }}
+              </For>
+            </svg>
+          </div>
+        </div>
+      </Show>
 
       {/* 3. 右侧：选定穴位临床定位与名家辨析详解卡 */}
       <div class={styles.acupointDetailPane}>

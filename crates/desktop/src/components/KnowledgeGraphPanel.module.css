@@ -1,0 +1,303 @@
+.container {
+  display: flex;
+  height: 100%;
+  width: 100%;
+  background: var(--bg-surface);
+  overflow: hidden;
+  font-family: inherit;
+}
+
+/* 1. 左侧方剂列表 */
+.leftSidebar {
+  width: 280px;
+  min-width: 260px;
+  background: var(--bg-card);
+  border-right: 1px solid var(--border-subtle);
+  display: flex;
+  flex-direction: column;
+}
+
+.paneHeader {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--border-subtle);
+  background: var(--bg-subtle);
+}
+
+.paneTitle {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.searchBox {
+  padding: 0.6rem 0.75rem;
+  display: flex;
+  gap: 0.35rem;
+  border-bottom: 1px solid var(--border-subtle);
+}
+
+.searchInput {
+  flex: 1;
+  padding: 0.35rem 0.6rem;
+  font-size: 0.8rem;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  background: var(--bg-input);
+  color: var(--text-primary);
+}
+
+.searchInput:focus {
+  outline: none;
+  border-color: var(--border-focus);
+}
+
+.searchBtn {
+  border: none;
+  background: var(--accent-cinnabar);
+  color: #fff;
+  padding: 0.35rem 0.65rem;
+  font-size: 0.78rem;
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.graphScrollList {
+  flex: 1;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.graphItemCard {
+  padding: 0.65rem 0.8rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.graphItemCard:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+}
+
+.graphItemActive {
+  background: rgba(184, 59, 38, 0.08);
+  border-color: var(--accent-cinnabar);
+  box-shadow: 0 2px 8px rgba(184, 59, 38, 0.1);
+}
+
+.itemTitleRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.itemTitle {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.badgeCategory {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: var(--bg-subtle);
+  color: var(--text-secondary);
+}
+
+.itemSummarySnippet {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  line-height: 1.4;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* 2. 中间知识图谱力导向/拓扑可视化画布 */
+.centerCanvasPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+}
+
+.canvasTopBar {
+  padding: 0.75rem 1.25rem;
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  background: var(--bg-card);
+  z-index: 10;
+}
+
+.canvasTitleGroup {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+}
+
+.canvasMainTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.legendRow {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-size: 0.74rem;
+  color: var(--text-secondary);
+}
+
+.legendDot {
+  display: inline-block;
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  margin-right: 0.25rem;
+}
+
+.svgViewport {
+  flex: 1;
+  width: 100%;
+  height: 100%;
+  cursor: grab;
+  user-select: none;
+}
+
+.svgViewport:active {
+  cursor: grabbing;
+}
+
+/* 节点样式 */
+.graphNodeGroup {
+  cursor: pointer;
+  transition: transform 0.2s ease;
+}
+
+.graphNodeGroup:hover circle {
+  filter: drop-shadow(0 0 6px rgba(184, 59, 38, 0.6));
+}
+
+.nodeLabelText {
+  font-size: 0.76rem;
+  font-weight: 600;
+  fill: var(--text-primary);
+  pointer-events: none;
+}
+
+.nodeSubText {
+  font-size: 0.62rem;
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+
+/* 连线样式 */
+.edgeLine {
+  stroke-linecap: round;
+  transition: stroke 0.2s ease;
+}
+
+.edgeLabelText {
+  font-size: 0.62rem;
+  fill: var(--text-secondary);
+  pointer-events: none;
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+}
+
+.warningLine {
+  stroke-dasharray: 4 3;
+  animation: warningPulse 1.5s infinite;
+}
+
+@keyframes warningPulse {
+  0% {
+    stroke-opacity: 0.4;
+  }
+  50% {
+    stroke-opacity: 1;
+  }
+  100% {
+    stroke-opacity: 0.4;
+  }
+}
+
+/* 3. 右侧节点/图谱详情深度卡片 */
+.rightDetailPane {
+  width: 360px;
+  min-width: 320px;
+  background: var(--bg-card);
+  overflow-y: auto;
+  padding: 1.25rem 1.4rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.cardSection {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.sectionTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.sectionBody {
+  font-size: 0.85rem;
+  line-height: 1.6;
+  color: var(--text-secondary);
+}
+
+.clinicalSummaryBox {
+  background: rgba(184, 59, 38, 0.04);
+  border-left: 3px solid var(--accent-cinnabar);
+  padding: 0.75rem 0.9rem;
+  border-radius: 4px;
+  font-size: 0.84rem;
+  line-height: 1.65;
+  color: var(--text-primary);
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+}
+
+.nodeActionBtn {
+  margin-top: 0.5rem;
+  border: 1px dashed var(--border-default);
+  background: var(--bg-subtle);
+  color: var(--text-primary);
+  padding: 0.6rem 0.8rem;
+  border-radius: var(--radius-sm);
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.nodeActionBtn:hover {
+  border-color: var(--accent-cinnabar);
+  color: var(--accent-cinnabar);
+  background: rgba(184, 59, 38, 0.05);
+}

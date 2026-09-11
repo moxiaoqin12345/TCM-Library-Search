@@ -284,3 +284,111 @@ export async function recommendAcupoints(
 ): Promise<AcupointInfo[]> {
   return invoke("recommend_acupoints", { symptom });
 }
+
+export type PairPrinciple =
+  | "yuan_luo"
+  | "shu_mu"
+  | "ba_mai_jiao_hui"
+  | "biao_li"
+  | "tong_ming"
+  | "ju_bu_yuan_duan";
+
+export interface AcupointPairFormula {
+  name: string;
+  principle: PairPrinciple;
+  points: string[];
+  efficacy: string;
+  mechanism: string;
+  indications: string[];
+  origin_classic: string;
+}
+
+export async function listAcupointPairs(): Promise<AcupointPairFormula[]> {
+  return invoke("list_acupoint_pairs");
+}
+
+export async function recommendAcupointPairs(
+  symptom: string
+): Promise<AcupointPairFormula[]> {
+  return invoke("recommend_acupoint_pairs", { symptom });
+}
+
+export type BodyRegion =
+  | "head_neck"
+  | "chest_abdomen"
+  | "back_waist"
+  | "upper_limb"
+  | "lower_limb";
+
+export type BodyAspect = "anterior" | "posterior";
+
+export interface BodyLocation {
+  region: BodyRegion;
+  aspect: BodyAspect;
+  coords: [number, number];
+}
+
+export interface AcupointWithLocation {
+  point: AcupointInfo;
+  location: BodyLocation;
+}
+
+export async function listAcupointsByRegion(
+  region?: BodyRegion,
+  aspect?: BodyAspect
+): Promise<[AcupointInfo, BodyLocation][]> {
+  return invoke("list_acupoints_by_region", { region: region || null, aspect: aspect || null });
+}
+
+export type GraphNodeType =
+  | "formula"
+  | "herb"
+  | "meridian"
+  | "nature_flavor"
+  | "treatment"
+  | "indication";
+
+export type GraphEdgeType =
+  | "contains"
+  | "monarch"
+  | "minister"
+  | "assistant"
+  | "envoy"
+  | "channels"
+  | "has_property"
+  | "treats"
+  | "incompatible";
+
+export interface GraphNode {
+  id: string;
+  label: string;
+  node_type: GraphNodeType;
+  weight: number;
+  description: string;
+  category: string;
+}
+
+export interface GraphEdge {
+  source: string;
+  target: string;
+  edge_type: GraphEdgeType;
+  label: string;
+  weight: number;
+  is_warning: boolean;
+}
+
+export interface KnowledgeGraph {
+  title: string;
+  focus_id: string;
+  nodes: GraphNode[];
+  edges: GraphEdge[];
+  clinical_summary: string;
+}
+
+export async function listFeaturedKnowledgeGraphs(): Promise<KnowledgeGraph[]> {
+  return invoke("list_featured_knowledge_graphs");
+}
+
+export async function getKnowledgeGraph(term: string): Promise<KnowledgeGraph | null> {
+  return invoke("get_knowledge_graph", { term });
+}

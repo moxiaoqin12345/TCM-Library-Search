@@ -9,12 +9,85 @@
 
 /* 1. 左侧经络导航 */
 .meridianListPane {
-  width: 260px;
-  min-width: 240px;
+  width: 280px;
+  min-width: 260px;
   background: var(--bg-card);
   border-right: 1px solid var(--border-subtle);
   display: flex;
   flex-direction: column;
+}
+
+/* 主切换 Tab */
+.mainTabs {
+  display: flex;
+  background: var(--bg-subtle);
+  border-bottom: 1px solid var(--border-subtle);
+  padding: 0.35rem 0.5rem;
+  gap: 0.35rem;
+}
+
+.mainTabBtn {
+  flex: 1;
+  border: 1px solid transparent;
+  background: transparent;
+  padding: 0.45rem 0.2rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  text-align: center;
+}
+
+.mainTabBtn:hover {
+  color: var(--text-primary);
+  background: var(--bg-hover);
+}
+
+.mainTabBtnActive {
+  background: var(--bg-card);
+  color: var(--accent-cinnabar);
+  border-color: var(--border-subtle);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.categoryFilterBar {
+  display: flex;
+  overflow-x: auto;
+  gap: 0.25rem;
+  padding: 0.4rem 0.5rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+  scrollbar-width: none;
+}
+
+.categoryFilterBar::-webkit-scrollbar {
+  display: none;
+}
+
+.catFilterPill {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.45rem;
+  border-radius: 12px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.catFilterPill:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.catFilterActive {
+  background: var(--accent-cinnabar);
+  color: #fff !important;
+  border-color: var(--accent-cinnabar);
+  font-weight: 500;
 }
 
 .paneTitle {
@@ -29,7 +102,7 @@
 .symptomSearchBox {
   display: flex;
   gap: 0.35rem;
-  padding: 0.6rem 0.75rem;
+  padding: 0.5rem 0.6rem;
   border-bottom: 1px solid var(--border-subtle);
 }
 
@@ -186,6 +259,75 @@
   color: var(--text-secondary);
 }
 
+/* 对穴左侧列表项 */
+.pairListCard {
+  padding: 0.6rem 0.75rem;
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.pairListCard:hover {
+  background: var(--bg-hover);
+  border-color: var(--border-focus);
+}
+
+.pairListCardActive {
+  background: rgba(184, 59, 38, 0.08);
+  border-color: var(--accent-cinnabar);
+  box-shadow: 0 2px 8px rgba(184, 59, 38, 0.1);
+}
+
+.pairListTop {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.pairListName {
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.pairPrincipleBadge {
+  font-size: 0.68rem;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  background: rgba(184, 59, 38, 0.1);
+  color: var(--accent-cinnabar);
+  font-weight: 500;
+}
+
+.pairPointsTagRow {
+  display: flex;
+  gap: 0.3rem;
+  flex-wrap: wrap;
+}
+
+.pairPointTag {
+  font-size: 0.72rem;
+  font-weight: 600;
+  background: var(--bg-subtle);
+  border: 1px solid var(--border-subtle);
+  padding: 0.05rem 0.35rem;
+  border-radius: 3px;
+  color: var(--text-primary);
+}
+
+.pairEfficacySnippet {
+  font-size: 0.74rem;
+  color: var(--text-muted);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
 /* 2. 中间：循行与流注拓扑 */
 .flowMapPane {
   flex: 1;
@@ -198,20 +340,35 @@
 }
 
 .mapHeader {
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.titleRow {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .mapTitle {
   font-size: 1.25rem;
   font-weight: 600;
   color: var(--text-primary);
-  margin: 0 0 0.3rem 0;
+  margin: 0;
+}
+
+.elementBadge {
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 600;
+  padding: 0.15rem 0.5rem;
+  border-radius: 10px;
 }
 
 .mapMeta {
   display: flex;
-  gap: 1rem;
-  font-size: 0.8rem;
+  gap: 1.5rem;
+  font-size: 0.82rem;
   color: var(--text-secondary);
 }
 
@@ -220,7 +377,7 @@
   border: 1px solid var(--border-subtle);
   border-radius: var(--radius-sm);
   padding: 0.75rem 1rem;
-  margin-bottom: 1.25rem;
+  margin-bottom: 1rem;
 }
 
 .courseTag {
@@ -241,169 +398,315 @@
   background: var(--bg-card);
   border: 1px solid var(--border-default);
   border-radius: var(--radius-md);
-  padding: 1rem;
-  margin-bottom: 1.25rem;
+  padding: 0.85rem 1rem 0.5rem 1rem;
+  margin-bottom: 1rem;
+}
+
+.flowRailHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
 }
 
 .flowRailTitle {
   font-size: 0.82rem;
   font-weight: 600;
   color: var(--text-secondary);
-  margin-bottom: 1.5rem;
 }
 
-.flowCanvas {
-  position: relative;
-  height: 90px;
-  width: 100%;
-}
-
-.railLine {
-  position: absolute;
-  top: 24px;
-  left: 3%;
-  right: 3%;
-  height: 4px;
-  background: linear-gradient(90deg, #b83b26, #4a7065, #b56e27);
-  border-radius: 2px;
-  opacity: 0.6;
-}
-
-.nodesTrack {
-  position: relative;
-  width: 100%;
-  height: 100%;
-}
-
-.flowNodeBox {
-  position: absolute;
-  top: 8px;
-  transform: translateX(-50%);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  cursor: pointer;
-  user-select: none;
-  transition: all 0.2s ease;
-}
-
-.nodeDot {
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: var(--bg-card);
-  border: 2px solid var(--accent-cinnabar);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.75rem;
-  font-weight: 700;
-  color: var(--text-primary);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1);
-  z-index: 2;
-  transition: all 0.2s ease;
-}
-
-.flowNodeBox:hover .nodeDot {
-  transform: scale(1.2);
-  background: var(--accent-cinnabar);
-  color: #fff;
-}
-
-.flowNodeActive .nodeDot {
-  background: var(--accent-cinnabar);
-  color: #fff;
-  transform: scale(1.25);
-  box-shadow: 0 0 12px rgba(184, 59, 38, 0.5);
-}
-
-.nodeLabel {
-  margin-top: 0.4rem;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-}
-
-.nodeName {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--text-primary);
-  white-space: nowrap;
-}
-
-.nodeCode {
-  font-size: 0.65rem;
-  color: var(--text-muted);
-}
-
-.acupointGridSection {
-  margin-top: 0.5rem;
-}
-
-.gridTitle {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 0.6rem;
-}
-
-.acupointGrid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 0.6rem;
-}
-
-.gridCard {
-  padding: 0.6rem 0.75rem;
-  background: var(--bg-card);
-  border: 1px solid var(--border-subtle);
-  border-radius: var(--radius-sm);
-  cursor: pointer;
-  transition: all 0.2s ease;
-  display: flex;
-  flex-direction: column;
-  gap: 0.3rem;
-}
-
-.gridCard:hover {
-  border-color: var(--accent-cinnabar);
-  transform: translateY(-1px);
-}
-
-.gridCardActive {
-  border-color: var(--accent-cinnabar);
-  background: rgba(184, 59, 38, 0.05);
-}
-
-.gridCardTop {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.ptName {
-  font-weight: 600;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-}
-
-.ptCode {
+.flowRailSub {
   font-size: 0.72rem;
   color: var(--text-muted);
 }
 
-.tagChips {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.25rem;
+/* SVG 动态流注拓扑画布 */
+.svgFlowContainer {
+  position: relative;
+  width: 100%;
+  height: 120px;
+  overflow: visible;
 }
 
-.tagChip {
-  font-size: 0.65rem;
-  padding: 0.1rem 0.35rem;
-  border-radius: 3px;
-  background: var(--bg-subtle);
+.svgCanvas {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+}
+
+.svgPulseFlow {
+  stroke-dasharray: 8 6;
+  animation: flowWave 20s linear infinite;
+}
+
+@keyframes flowWave {
+  from {
+    stroke-dashoffset: 200;
+  }
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.svgNodeGroup {
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.svgNodeGroup:hover .svgCircle {
+  r: 11;
+  fill: var(--accent-cinnabar);
+}
+
+.svgCircle {
+  transition: all 0.2s ease;
+}
+
+.svgHalo {
+  animation: pulseHalo 2s infinite ease-in-out;
+}
+
+@keyframes pulseHalo {
+  0% {
+    r: 12;
+    opacity: 0.6;
+  }
+  50% {
+    r: 18;
+    opacity: 0.2;
+  }
+  100% {
+    r: 12;
+    opacity: 0.6;
+  }
+}
+
+.svgNodeText {
+  font-size: 0.72rem;
+  user-select: none;
+  pointer-events: none;
+}
+
+.svgCodeText {
+  font-size: 0.62rem;
+  user-select: none;
+  pointer-events: none;
+}
+
+/* 特定穴过滤矩阵 */
+.specificFilterSection {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 0.8rem;
+  flex-wrap: wrap;
+}
+
+.specificFilterTitle {
+  font-size: 0.78rem;
+  font-weight: 600;
   color: var(--text-secondary);
+}
+
+.filterPills {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.filterPill {
+  border: 1px solid var(--border-default);
+  background: var(--bg-card);
+  color: var(--text-secondary);
+  font-size: 0.72rem;
+  padding: 0.2rem 0.5rem;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.filterPill:hover {
+  border-color: var(--accent-cinnabar);
+  color: var(--text-primary);
+}
+
+.filterPillActive {
+  background: var(--accent-cinnabar);
+  border-color: var(--accent-cinnabar);
+  color: #fff !important;
+  font-weight: 600;
+}
+
+/* 经典对穴展示区 */
+.pairDetailContainer {
+  display: flex;
+  flex-direction: column;
+  gap: 1.2rem;
+}
+
+.pairDetailHeader {
+  border-bottom: 1px solid var(--border-subtle);
+  padding-bottom: 0.8rem;
+}
+
+.pairNameRow {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  margin-bottom: 0.5rem;
+}
+
+.pairMainTitle {
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin: 0;
+}
+
+.pairPrincipleFullTag {
+  font-size: 0.76rem;
+  font-weight: 600;
+  color: var(--accent-cinnabar);
+  background: rgba(184, 59, 38, 0.1);
+  padding: 0.2rem 0.6rem;
+  border-radius: 4px;
+}
+
+.pairEfficacyHeader {
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #3d7a5a;
+  margin: 0;
+  background: rgba(61, 122, 90, 0.08);
+  padding: 0.5rem 0.8rem;
+  border-radius: var(--radius-sm);
+  border-left: 3px solid #3d7a5a;
+}
+
+.pairPointsCardsRow {
+  display: flex;
+  gap: 1rem;
+}
+
+.pairAcupointActionCard {
+  flex: 1;
+  background: var(--bg-card);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.pairAcupointActionCard:hover {
+  border-color: var(--accent-cinnabar);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(184, 59, 38, 0.15);
+}
+
+.pairPtCardHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.pairPtIcon {
+  font-size: 1rem;
+}
+
+.pairPtName {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: var(--text-primary);
+}
+
+.pairPtActionTip {
+  font-size: 0.72rem;
+  color: var(--accent-cinnabar);
+  font-weight: 500;
+}
+
+.pairMechanismBox {
+  background: var(--bg-card);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-sm);
+  padding: 0.9rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.mechanismTitle {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.mechanismContent {
+  font-size: 0.88rem;
+  line-height: 1.65;
+  color: var(--text-secondary);
+}
+
+.pairClassicBox {
+  background: rgba(184, 59, 38, 0.03);
+  border: 1px dashed rgba(184, 59, 38, 0.3);
+  border-radius: var(--radius-sm);
+  padding: 0.8rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+
+.classicBoxHeader {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--accent-cinnabar);
+}
+
+.classicBoxQuote {
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+  font-size: 0.88rem;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.pairIndicationsBox {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.indicationsBoxHeader {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+}
+
+.pairIndicationsList {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.pairIndicationBtn {
+  border: 1px solid var(--border-default);
+  background: var(--bg-surface);
+  color: var(--text-primary);
+  font-size: 0.8rem;
+  padding: 0.3rem 0.7rem;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.pairIndicationBtn:hover {
+  border-color: var(--accent-cinnabar);
+  color: var(--accent-cinnabar);
+  background: rgba(184, 59, 38, 0.05);
 }
 
 /* 3. 右侧：穴位临床定位与名家辨析 */
@@ -572,3 +875,137 @@
   color: var(--accent-cinnabar);
   background: rgba(184, 59, 38, 0.05);
 }
+
+/* ========================================================
+   4. 人体部形 2D/3D 交互穴位总图
+======================================================== */
+.bodyMapPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+  position: relative;
+}
+
+.bodyMapTopBar {
+  padding: 0.65rem 1.25rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.aspectToggleGroup {
+  display: flex;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  border: 1px solid var(--border-default);
+}
+
+.aspectToggleBtn {
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aspectToggleBtnActive {
+  background: var(--accent-cinnabar);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(184, 59, 38, 0.3);
+}
+
+.regionPillsRow {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.regionPillBtn {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.regionPillBtn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.regionPillBtnActive {
+  background: var(--bg-card);
+  border-color: var(--accent-cinnabar);
+  color: var(--accent-cinnabar);
+  font-weight: 600;
+}
+
+.bodyCanvasWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  position: relative;
+  padding: 1rem;
+  background: radial-gradient(circle at center, var(--bg-surface) 40%, var(--bg-subtle) 100%);
+}
+
+.bodySvg {
+  max-height: 100%;
+  width: auto;
+  max-width: 540px;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.06));
+  user-select: none;
+}
+
+.bodyPointGroup {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.bodyPointCircle {
+  transition: r 0.2s ease, fill 0.2s ease;
+}
+
+.bodyPointGroup:hover .bodyPointCircle {
+  r: 8;
+  filter: drop-shadow(0 0 6px rgba(184, 59, 38, 0.8));
+}
+
+.bodyPointActive .bodyPointCircle {
+  r: 9;
+  filter: drop-shadow(0 0 8px rgba(184, 59, 38, 1));
+}
+
+.bodyPointLabel {
+  font-size: 11px;
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+  font-weight: 600;
+  fill: var(--text-primary);
+  pointer-events: none;
+}
+
+.bodyPointCode {
+  font-size: 9px;
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+

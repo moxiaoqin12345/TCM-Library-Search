@@ -6,6 +6,7 @@
 pub mod compatibility;
 pub mod diff;
 pub mod error;
+pub mod graph;
 pub mod index;
 pub mod matcher;
 pub mod meridian;
@@ -18,11 +19,17 @@ pub use compatibility::{
 };
 pub use diff::{diff_texts, DiffChunk, DiffOp, TextDiffResult};
 pub use error::{CoreError, Result};
+pub use graph::{
+    get_canonical_formula_graphs, get_knowledge_graph_for_term, GraphEdge, GraphEdgeType,
+    GraphNode, GraphNodeType, KnowledgeGraph,
+};
 pub use index::{locate_manifest_path, CorpusIndex};
 pub use matcher::search_corpus;
 pub use meridian::{
-    find_acupoint, get_meridian_knowledge_base, recommend_acupoints_for_symptom, AcupointInfo,
-    MeridianCategory, MeridianInfo, SpecificAcupointType,
+    find_acupoint, get_acupoints_by_region, get_canonical_acupoint_pairs,
+    get_meridian_knowledge_base, recommend_acupoints_for_symptom, recommend_pairs_for_symptom,
+    AcupointInfo, AcupointPairFormula, BodyAspect, BodyLocation, BodyRegion, MeridianCategory,
+    MeridianInfo, PairPrinciple, SpecificAcupointType,
 };
 pub use models::{
     BookChapterEntryItem, BookChapterTreeItem, BookSummaryItem, CategoryTreeItem, CorpusConditions,

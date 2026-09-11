@@ -44,6 +44,79 @@ pub enum SpecificAcupointType {
     Normal,
 }
 
+/// 人体解剖部分大类 (部形)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BodyRegion {
+    /// 头面颈项部 (Head & Neck)
+    #[default]
+    HeadNeck,
+    /// 胸腹部 (Chest & Abdomen)
+    ChestAbdomen,
+    /// 背腰骶部 (Back & Lumbar)
+    BackWaist,
+    /// 上肢部 (Upper Limb: 肩/臂/肘/腕/手)
+    UpperLimb,
+    /// 下肢部 (Lower Limb: 臀/股/膝/胫/足)
+    LowerLimb,
+}
+
+/// 人体体表正背侧面朝向
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BodyAspect {
+    /// 正面 (腹面 / 前侧)
+    #[default]
+    Anterior,
+    /// 背面 (背面 / 后侧)
+    Posterior,
+}
+
+/// 人体穴位 2D 坐标与部形定位数据
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BodyLocation {
+    pub region: BodyRegion,
+    pub aspect: BodyAspect,
+    pub coords: (f64, f64),
+}
+
+/// 经典配穴原则
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case")]
+pub enum PairPrinciple {
+    /// 原络配穴法 (主客配穴)
+    YuanLuo,
+    /// 俞募配穴法 (前后配穴)
+    ShuMu,
+    /// 八脉交会配穴 (上下相通)
+    BaMaiJiaoHui,
+    /// 表里经配穴
+    BiaoLi,
+    /// 同名经配穴 (上下同气相求)
+    TongMing,
+    /// 局部远端对偶配穴 (如四关、四总穴)
+    JuBuYuanDuan,
+}
+
+/// 经典配穴处方模型
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct AcupointPairFormula {
+    /// 配穴名称 (如 "四关穴", "胃痛俞募对偶方")
+    pub name: String,
+    /// 配穴法则分类
+    pub principle: PairPrinciple,
+    /// 包含的穴位名称集合 (如 ["合谷", "太冲"])
+    pub points: Vec<String>,
+    /// 治法与临床功效 (如 "平肝息风，宣通气血")
+    pub efficacy: String,
+    /// 配伍机理解析
+    pub mechanism: String,
+    /// 主治病证
+    pub indications: Vec<String>,
+    /// 经典溯源 (如《针灸大全·四关说》)
+    pub origin_classic: String,
+}
+
 /// 穴位临床数据模型
 #[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
 pub struct AcupointInfo {
@@ -67,6 +140,13 @@ pub struct AcupointInfo {
     pub manipulation: String,
     /// 交互拓扑在经络循行上的相对分寸位置 (0.0 起始 ~ 1.0 终止)
     pub flow_position: f64,
+}
+
+impl AcupointInfo {
+    /// 获取穴位解剖部形与 2D 人体总图坐标
+    pub fn get_body_location(&self) -> BodyLocation {
+        deduce_body_location(&self.name, &self.code)
+    }
 }
 
 /// 经脉数据模型
@@ -458,6 +538,590 @@ pub fn get_meridian_knowledge_base() -> Vec<MeridianInfo> {
                 },
             ],
         },
+
+        // 7. 手少阴心经 (HT)
+        MeridianInfo {
+            name: "手少阴心经".to_string(),
+            code: "HT".to_string(),
+            category: MeridianCategory::ShouSanYin,
+            element: "君火".to_string(),
+            paired_meridian: "手太阳小肠经".to_string(),
+            peak_time: "午时 (11:00 - 13:00)".to_string(),
+            course_description: "起于心中，出属心系，下膈，络小肠。其支者，从心系，上挟咽，系目系。其直者，复从心系，却上肺，下出腋下，下循臑内后廉，行太阴、心主之后，下肘内，循臂内后廉，抵掌后锐骨之端，入掌内后廉，循小指之内，出其端。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "极泉".to_string(),
+                    code: "HT1".to_string(),
+                    meridian_name: "手少阴心经".to_string(),
+                    location: "在腋区，腋窝中央，腋动脉搏动处。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["心经起始穴".to_string(), "理气活血要穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "胸闷".to_string(), "胁肋疼痛".to_string(), "瘰疬".to_string(), "肩臂挛痛".to_string()],
+                    manipulation: "避开腋动脉，微向前上方斜刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.05,
+                },
+                AcupointInfo {
+                    name: "通里".to_string(),
+                    code: "HT5".to_string(),
+                    meridian_name: "手少阴心经".to_string(),
+                    location: "在前臂前区，腕掌侧远端横纹上1寸，尺侧腕屈肌腱桡侧缘。".to_string(),
+                    origin_classic: "《灵枢·经脉》".to_string(),
+                    specific_types: vec![SpecificAcupointType::LuoXue],
+                    specific_tags: vec!["络穴".to_string(), "宁神开窍要穴".to_string()],
+                    indications: vec!["心悸".to_string(), "怔忡".to_string(), "暴喑".to_string(), "舌强不语".to_string(), "腕臂痛".to_string()],
+                    manipulation: "直刺0.3-0.5寸。".to_string(),
+                    flow_position: 0.65,
+                },
+                AcupointInfo {
+                    name: "神门".to_string(),
+                    code: "HT7".to_string(),
+                    meridian_name: "手少阴心经".to_string(),
+                    location: "在腕前区，腕掌侧远端横纹尺侧端，尺侧腕屈肌腱桡侧凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::YuanXue],
+                    specific_tags: vec!["输穴 (土)".to_string(), "原穴".to_string(), "安神第一要穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "怔忡".to_string(), "失眠".to_string(), "健忘".to_string(), "癫狂痫".to_string(), "胸胁痛".to_string()],
+                    manipulation: "直刺0.3-0.5寸。".to_string(),
+                    flow_position: 0.85,
+                },
+                AcupointInfo {
+                    name: "少冲".to_string(),
+                    code: "HT9".to_string(),
+                    meridian_name: "手少阴心经".to_string(),
+                    location: "在手指，小指末节桡侧，指甲根角侧上方0.1寸。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["井穴 (木)".to_string(), "回阳救急".to_string()],
+                    indications: vec!["心悸".to_string(), "心痛".to_string(), "胸胁痛".to_string(), "高热昏迷".to_string(), "癫狂".to_string()],
+                    manipulation: "浅刺0.1寸或点刺出血。".to_string(),
+                    flow_position: 1.00,
+                },
+            ],
+        },
+
+        // 8. 手太阳小肠经 (SI)
+        MeridianInfo {
+            name: "手太阳小肠经".to_string(),
+            code: "SI".to_string(),
+            category: MeridianCategory::ShouSanYang,
+            element: "火".to_string(),
+            paired_meridian: "手少阴心经".to_string(),
+            peak_time: "未时 (13:00 - 15:00)".to_string(),
+            course_description: "起于小指之端，循手外侧上腕，出踝中，直上循臂骨下廉，出肘内侧两筋之间，上循臑外后廉，出肩解，绕肩胛，交肩上，入缺盆，络心，循咽下膈，抵胃，属小肠。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "少泽".to_string(),
+                    code: "SI1".to_string(),
+                    meridian_name: "手太阳小肠经".to_string(),
+                    location: "在手指，小指末节尺侧，指甲根角侧上方0.1寸。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["井穴 (金)".to_string(), "通乳名穴".to_string()],
+                    indications: vec!["乳痈".to_string(), "产后乳少".to_string(), "昏迷".to_string(), "热病".to_string(), "头痛".to_string(), "目翳".to_string()],
+                    manipulation: "浅刺0.1寸或点刺出血。孕妇慎刺。".to_string(),
+                    flow_position: 0.05,
+                },
+                AcupointInfo {
+                    name: "后溪".to_string(),
+                    code: "SI3".to_string(),
+                    meridian_name: "手太阳小肠经".to_string(),
+                    location: "在手背，微握拳，第5掌指关节尺侧近端赤白肉际凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::BaMaiJiaoHuiXue],
+                    specific_tags: vec!["输穴 (木)".to_string(), "八脉交会穴 (通督脉)".to_string(), "通督镇痛要穴".to_string()],
+                    indications: vec!["头项强痛".to_string(), "腰背痛".to_string(), "目赤肿痛".to_string(), "耳鸣".to_string(), "耳聋".to_string(), "癫狂痫".to_string(), "盗汗".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.20,
+                },
+                AcupointInfo {
+                    name: "养老".to_string(),
+                    code: "SI6".to_string(),
+                    meridian_name: "手太阳小肠经".to_string(),
+                    location: "在前臂后区，尺骨头桡侧骨缝凹陷中。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::XiXue],
+                    specific_tags: vec!["郄穴".to_string(), "明目舒筋要穴".to_string()],
+                    indications: vec!["目视不明".to_string(), "肩背肘臂痠痛".to_string(), "急性腰痛".to_string()],
+                    manipulation: "向肘部斜刺0.5-0.8寸。".to_string(),
+                    flow_position: 0.40,
+                },
+                AcupointInfo {
+                    name: "天宗".to_string(),
+                    code: "SI11".to_string(),
+                    meridian_name: "手太阳小肠经".to_string(),
+                    location: "在肩胛区，肩胛冈中点与肩胛骨下角连线上1/3与下2/3交点凹陷中。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_tags: vec!["肩周舒筋要穴".to_string()],
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    indications: vec!["肩胛疼痛".to_string(), "肩背痹痛".to_string(), "乳痈".to_string(), "气喘".to_string()],
+                    manipulation: "直刺或斜刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.70,
+                },
+                AcupointInfo {
+                    name: "听宫".to_string(),
+                    code: "SI19".to_string(),
+                    meridian_name: "手太阳小肠经".to_string(),
+                    location: "在面部，耳屏正中与下颌骨髁突之间的凹陷中。微张口取穴。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["手足少阳、手太阳交会穴".to_string(), "耳疾要穴".to_string()],
+                    indications: vec!["耳鸣".to_string(), "耳聋".to_string(), "聤耳".to_string(), "齿痛".to_string(), "癫狂痫".to_string()],
+                    manipulation: "张口，直刺1.0-1.5寸。留针时不可合口。".to_string(),
+                    flow_position: 1.00,
+                },
+            ],
+        },
+
+        // 9. 足太阳膀胱经 (BL)
+        MeridianInfo {
+            name: "足太阳膀胱经".to_string(),
+            code: "BL".to_string(),
+            category: MeridianCategory::ZuSanYang,
+            element: "水".to_string(),
+            paired_meridian: "足少阴肾经".to_string(),
+            peak_time: "申时 (15:00 - 17:00)".to_string(),
+            course_description: "起于目内眦，上额，交巅。其支者，从巅至耳上角。其直者，从巅入络脑，还出别下项，循肩膊内，挟脊抵腰中，入循膂，络肾，属膀胱。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "睛明".to_string(),
+                    code: "BL1".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在面部，目内眦内上方眶内侧壁凹陷中。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["手足太阳、足阳明、阴阳跷五脉交会".to_string(), "眼科主穴".to_string()],
+                    indications: vec!["目赤肿痛".to_string(), "目眩".to_string(), "近视".to_string(), "夜盲".to_string(), "迎风流泪".to_string()],
+                    manipulation: "患者闭目，轻推眼球向外，紧贴眶缘缓慢直刺0.5-1.0寸，不提插捻转，出针按压止血。".to_string(),
+                    flow_position: 0.02,
+                },
+                AcupointInfo {
+                    name: "攒竹".to_string(),
+                    code: "BL2".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在面部，眉头凹陷中，额切迹处。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["头目止痛要穴".to_string()],
+                    indications: vec!["头痛".to_string(), "眉棱骨痛".to_string(), "目视不明".to_string(), "面瘫".to_string(), "呃逆".to_string()],
+                    manipulation: "平刺0.5-0.8寸，或向眉中透刺。".to_string(),
+                    flow_position: 0.05,
+                },
+                AcupointInfo {
+                    name: "肺俞".to_string(),
+                    code: "BL13".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在脊柱区，第3胸椎棘突下，后正中线旁开1.5寸。".to_string(),
+                    origin_classic: "《灵枢·背腧》".to_string(),
+                    specific_types: vec![SpecificAcupointType::BeiShuXue],
+                    specific_tags: vec!["肺之背俞穴".to_string(), "调补肺气要穴".to_string()],
+                    indications: vec!["咳嗽".to_string(), "气喘".to_string(), "吐血".to_string(), "骨蒸潮热".to_string(), "盗汗".to_string(), "胸闷".to_string()],
+                    manipulation: "向椎体方向斜刺0.5-0.8寸，不可深刺，防气胸。".to_string(),
+                    flow_position: 0.25,
+                },
+                AcupointInfo {
+                    name: "肾俞".to_string(),
+                    code: "BL23".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在脊柱区，第2腰椎棘突下，后正中线旁开1.5寸。".to_string(),
+                    origin_classic: "《灵枢·背腧》".to_string(),
+                    specific_types: vec![SpecificAcupointType::BeiShuXue],
+                    specific_tags: vec!["肾之背俞穴".to_string(), "先天之本调补要穴".to_string()],
+                    indications: vec!["腰痛".to_string(), "遗精".to_string(), "阳痿".to_string(), "月经不调".to_string(), "耳鸣".to_string(), "水肿".to_string(), "小便不利".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.45,
+                },
+                AcupointInfo {
+                    name: "委中".to_string(),
+                    code: "BL40".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在膝后区，腘横纹中点。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::XiaHeXue, SpecificAcupointType::SiZongXue],
+                    specific_tags: vec!["合穴 (土)".to_string(), "膀胱下合穴".to_string(), "四总穴 (腰背委中求)".to_string(), "刺血退热要穴".to_string()],
+                    indications: vec!["腰背痛".to_string(), "下肢痿痹".to_string(), "腹痛".to_string(), "急性吐泻".to_string(), "中暑".to_string(), "丹毒".to_string()],
+                    manipulation: "直刺1.0-1.5寸，或三棱针点刺腘静脉放血。".to_string(),
+                    flow_position: 0.70,
+                },
+                AcupointInfo {
+                    name: "昆仑".to_string(),
+                    code: "BL60".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在踝区，外踝尖与跟腱之间的凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["经穴 (火)".to_string(), "下行降气要穴".to_string()],
+                    indications: vec!["后头痛".to_string(), "项强".to_string(), "腰骶疼痛".to_string(), "足跟痛".to_string(), "难产".to_string(), "癫痫".to_string()],
+                    manipulation: "直刺0.5-0.8寸。孕妇禁针。".to_string(),
+                    flow_position: 0.92,
+                },
+                AcupointInfo {
+                    name: "至阴".to_string(),
+                    code: "BL67".to_string(),
+                    meridian_name: "足太阳膀胱经".to_string(),
+                    location: "在足趾，小趾末节外侧，趾甲根角侧后方0.1寸。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["井穴 (金)".to_string(), "矫正胎位神穴".to_string()],
+                    indications: vec!["胎位不正".to_string(), "滞产".to_string(), "头痛".to_string(), "目痛".to_string(), "鼻塞".to_string()],
+                    manipulation: "浅刺0.1寸；矫正胎位多用艾炷灸或艾条温和灸15-20分钟。".to_string(),
+                    flow_position: 1.00,
+                },
+            ],
+        },
+
+        // 10. 足少阴肾经 (KI)
+        MeridianInfo {
+            name: "足少阴肾经".to_string(),
+            code: "KI".to_string(),
+            category: MeridianCategory::ZuSanYin,
+            element: "水".to_string(),
+            paired_meridian: "足太阳膀胱经".to_string(),
+            peak_time: "酉时 (17:00 - 19:00)".to_string(),
+            course_description: "起于小趾之下，斜走足心，出于然谷之下，循内踝之后，别入跟中，以上踹内，出腘内廉，上股内后廉，贯脊属肾，络膀胱。其直者，从肾上贯肝膈，入肺中，循喉咙，挟舌本。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "涌泉".to_string(),
+                    code: "KI1".to_string(),
+                    meridian_name: "足少阴肾经".to_string(),
+                    location: "在足底部，卷足时足前部凹陷处，约当足底第2、第3趾蹼缘与足跟连线的前1/3与后2/3交点上。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["井穴 (木)".to_string(), "开窍苏厥要穴".to_string(), "引火归元".to_string()],
+                    indications: vec!["昏迷".to_string(), "中暑".to_string(), "癫痫".to_string(), "头痛".to_string(), "眩晕".to_string(), "咯血".to_string(), "咽喉肿痛".to_string(), "便秘".to_string()],
+                    manipulation: "直刺0.5-1.0寸；多用贴敷或艾灸引热下行。".to_string(),
+                    flow_position: 0.05,
+                },
+                AcupointInfo {
+                    name: "太溪".to_string(),
+                    code: "KI3".to_string(),
+                    meridian_name: "足少阴肾经".to_string(),
+                    location: "在踝区，内踝尖与跟腱之间的凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::YuanXue],
+                    specific_tags: vec!["输穴 (土)".to_string(), "原穴".to_string(), "滋补肾阴第一要穴".to_string(), "回阳九针穴".to_string()],
+                    indications: vec!["头痛".to_string(), "目眩".to_string(), "咽喉肿痛".to_string(), "牙痛".to_string(), "耳鸣".to_string(), "耳聋".to_string(), "气喘".to_string(), "消渴".to_string(), "遗精".to_string(), "腰脊痛".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.25,
+                },
+                AcupointInfo {
+                    name: "照海".to_string(),
+                    code: "KI6".to_string(),
+                    meridian_name: "足少阴肾经".to_string(),
+                    location: "在踝区，内踝尖下1寸，内踝下缘边际凹陷中。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::BaMaiJiaoHuiXue],
+                    specific_tags: vec!["八脉交会穴 (通阴跷脉)".to_string(), "利咽滋阴名穴".to_string()],
+                    indications: vec!["咽喉干痛".to_string(), "目赤肿痛".to_string(), "失眠".to_string(), "癫痫".to_string(), "便秘".to_string(), "小便频数".to_string(), "月经不调".to_string()],
+                    manipulation: "直刺0.5-0.8寸。".to_string(),
+                    flow_position: 0.40,
+                },
+                AcupointInfo {
+                    name: "复溜".to_string(),
+                    code: "KI7".to_string(),
+                    meridian_name: "足少阴肾经".to_string(),
+                    location: "在小腿内侧，内踝尖上2寸，跟腱的前缘。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["经穴 (金)".to_string(), "利水调汗要穴".to_string()],
+                    indications: vec!["水肿".to_string(), "腹胀".to_string(), "腹泻".to_string(), "盗汗".to_string(), "无汗".to_string(), "下肢痿痹".to_string()],
+                    manipulation: "直刺0.8-1.2寸。".to_string(),
+                    flow_position: 0.50,
+                },
+            ],
+        },
+
+        // 11. 手厥阴心包经 (PC)
+        MeridianInfo {
+            name: "手厥阴心包经".to_string(),
+            code: "PC".to_string(),
+            category: MeridianCategory::ShouSanYin,
+            element: "相火".to_string(),
+            paired_meridian: "手少阳三焦经".to_string(),
+            peak_time: "戌时 (19:00 - 21:00)".to_string(),
+            course_description: "起于胸中，出属心包络，下膈，历络三焦。其支者，循胸出胁，下腋三寸，上抵腋下，循臑内，行太阴、少阴之间，入肘中，下臂，行两筋之间，入掌中，循中指，出其端。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "曲泽".to_string(),
+                    code: "PC3".to_string(),
+                    meridian_name: "手厥阴心包经".to_string(),
+                    location: "在肘前区，肘微屈，肘横纹上，肱二头肌腱尺侧缘凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["合穴 (水)".to_string(), "清热止呕穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "胃痛".to_string(), "呕吐".to_string(), "泄泻".to_string(), "热病".to_string(), "肘臂挛痛".to_string()],
+                    manipulation: "直刺0.8-1.2寸，或点刺出血。".to_string(),
+                    flow_position: 0.35,
+                },
+                AcupointInfo {
+                    name: "郄门".to_string(),
+                    code: "PC4".to_string(),
+                    meridian_name: "手厥阴心包经".to_string(),
+                    location: "在前臂前区，腕掌侧远端横纹上5寸，掌长肌腱与桡侧腕屈肌腱之间。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::XiXue],
+                    specific_tags: vec!["郄穴".to_string(), "急症心胸止痛穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "胸痛".to_string(), "咳血".to_string(), "呕血".to_string(), "疔疮".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.55,
+                },
+                AcupointInfo {
+                    name: "内关".to_string(),
+                    code: "PC6".to_string(),
+                    meridian_name: "手厥阴心包经".to_string(),
+                    location: "在前臂前区，腕掌侧远端横纹上2寸，掌长肌腱与桡侧腕屈肌腱之间。".to_string(),
+                    origin_classic: "《灵枢·经脉》".to_string(),
+                    specific_types: vec![SpecificAcupointType::LuoXue, SpecificAcupointType::BaMaiJiaoHuiXue, SpecificAcupointType::SiZongXue],
+                    specific_tags: vec!["络穴".to_string(), "八脉交会穴 (通阴维脉)".to_string(), "四总穴 (心胸内关谋)".to_string(), "心胃神经综合第一要穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "胸闷".to_string(), "胃痛".to_string(), "呕吐".to_string(), "呃逆".to_string(), "失眠".to_string(), "癫痫".to_string(), "晕车".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.75,
+                },
+                AcupointInfo {
+                    name: "大陵".to_string(),
+                    code: "PC7".to_string(),
+                    meridian_name: "手厥阴心包经".to_string(),
+                    location: "在腕前区，腕掌侧远端横纹中点，掌长肌腱与桡侧腕屈肌腱之间。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::YuanXue],
+                    specific_tags: vec!["输穴 (土)".to_string(), "原穴".to_string(), "十三鬼穴".to_string()],
+                    indications: vec!["心痛".to_string(), "心悸".to_string(), "胃痛".to_string(), "呕吐".to_string(), "癫狂".to_string(), "胸胁痛".to_string(), "口臭".to_string()],
+                    manipulation: "直刺0.3-0.5寸。".to_string(),
+                    flow_position: 0.88,
+                },
+                AcupointInfo {
+                    name: "劳宫".to_string(),
+                    code: "PC8".to_string(),
+                    meridian_name: "手厥阴心包经".to_string(),
+                    location: "在掌区，横平第3掌指关节近端，第2、3掌骨之间偏于第3掌骨，握拳时中指尖下。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["荥穴 (火)".to_string(), "泻心火名穴".to_string()],
+                    indications: vec!["昏迷".to_string(), "中暑".to_string(), "心痛".to_string(), "癫狂痫".to_string(), "口疮".to_string(), "口臭".to_string()],
+                    manipulation: "直刺0.3-0.5寸。".to_string(),
+                    flow_position: 0.95,
+                },
+            ],
+        },
+
+        // 12. 手少阳三焦经 (TE)
+        MeridianInfo {
+            name: "手少阳三焦经".to_string(),
+            code: "TE".to_string(),
+            category: MeridianCategory::ShouSanYang,
+            element: "相火".to_string(),
+            paired_meridian: "手厥阴心包经".to_string(),
+            peak_time: "亥时 (21:00 - 23:00)".to_string(),
+            course_description: "起于小指次指之端，上出两指之间，循手表腕，出臂外两骨之间，上贯肘，循臑外上肩，而交出少阳之后，入缺盆，布膻中，散络心包，下膈，循属三焦。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "中渚".to_string(),
+                    code: "TE3".to_string(),
+                    meridian_name: "手少阳三焦经".to_string(),
+                    location: "在手背，第4、第5掌骨间，掌指关节后方凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["输穴 (木)".to_string(), "通利耳窍要穴".to_string()],
+                    indications: vec!["头痛".to_string(), "耳鸣".to_string(), "耳聋".to_string(), "目赤肿痛".to_string(), "咽喉肿痛".to_string(), "热病".to_string(), "手指不能屈伸".to_string()],
+                    manipulation: "直刺0.5-0.8寸。".to_string(),
+                    flow_position: 0.15,
+                },
+                AcupointInfo {
+                    name: "阳池".to_string(),
+                    code: "TE4".to_string(),
+                    meridian_name: "手少阳三焦经".to_string(),
+                    location: "在腕后区，腕背侧远端横纹上，指伸肌腱的尺侧缘凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::YuanXue],
+                    specific_tags: vec!["原穴".to_string(), "调畅少阳气机".to_string()],
+                    indications: vec!["头痛".to_string(), "目赤肿痛".to_string(), "耳聋".to_string(), "咽喉肿痛".to_string(), "消渴".to_string(), "手腕疼痛".to_string()],
+                    manipulation: "直刺0.3-0.5寸。".to_string(),
+                    flow_position: 0.30,
+                },
+                AcupointInfo {
+                    name: "外关".to_string(),
+                    code: "TE5".to_string(),
+                    meridian_name: "手少阳三焦经".to_string(),
+                    location: "在前臂后区，腕背侧远端横纹上2寸，尺骨与桡骨间隙中点。".to_string(),
+                    origin_classic: "《灵枢·经脉》".to_string(),
+                    specific_types: vec![SpecificAcupointType::LuoXue, SpecificAcupointType::BaMaiJiaoHuiXue],
+                    specific_tags: vec!["络穴".to_string(), "八脉交会穴 (通阳维脉)".to_string(), "和解少阳要穴".to_string()],
+                    indications: vec!["热病".to_string(), "头痛".to_string(), "耳鸣".to_string(), "耳聋".to_string(), "瘰疬".to_string(), "胁肋痛".to_string(), "上肢痹痛瘫痪".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.45,
+                },
+                AcupointInfo {
+                    name: "支沟".to_string(),
+                    code: "TE6".to_string(),
+                    meridian_name: "手少阳三焦经".to_string(),
+                    location: "在前臂后区，腕背侧远端横纹上3寸，尺骨与桡骨间隙中点。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["经穴 (火)".to_string(), "通便止胁痛特效穴".to_string()],
+                    indications: vec!["便秘".to_string(), "胁肋痛".to_string(), "耳鸣".to_string(), "耳聋".to_string(), "暴喑".to_string(), "瘰疬".to_string()],
+                    manipulation: "直刺0.5-1.0寸。".to_string(),
+                    flow_position: 0.55,
+                },
+                AcupointInfo {
+                    name: "丝竹空".to_string(),
+                    code: "TE23".to_string(),
+                    meridian_name: "手少阳三焦经".to_string(),
+                    location: "在面部，眉梢凹陷中。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["目疾偏头痛穴".to_string()],
+                    indications: vec!["头痛".to_string(), "目眩".to_string(), "目赤肿痛".to_string(), "眼睑瞤动".to_string(), "癫痫".to_string()],
+                    manipulation: "平刺0.5-1.0寸。禁灸。".to_string(),
+                    flow_position: 1.00,
+                },
+            ],
+        },
+
+        // 13. 足少阳胆经 (GB)
+        MeridianInfo {
+            name: "足少阳胆经".to_string(),
+            code: "GB".to_string(),
+            category: MeridianCategory::ZuSanYang,
+            element: "木".to_string(),
+            paired_meridian: "足厥阴肝经".to_string(),
+            peak_time: "子时 (23:00 - 01:00)".to_string(),
+            course_description: "起于目锐眦，上抵头角，下耳后，循颈行手少阳之前，至肩上却交出手少阳之后，入缺盆。其支者，从耳后入耳中，出走耳前，至目锐眦后。其直者，从缺盆下腋，循胸，过季胁，下合髀厌中。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "风池".to_string(),
+                    code: "GB20".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在颈后区，枕骨之下，胸锁乳突肌与斜方肌上端之间的凹陷中。".to_string(),
+                    origin_classic: "《灵枢·热病》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["足少阳与阳维脉交会穴".to_string(), "祛风解表头目主穴".to_string()],
+                    indications: vec!["头痛".to_string(), "眩晕".to_string(), "目赤肿痛".to_string(), "鼻渊".to_string(), "耳鸣".to_string(), "感冒".to_string(), "颈项强痛".to_string(), "中风失语".to_string()],
+                    manipulation: "针尖微向鼻尖方向斜刺0.8-1.2寸，不可向内上方深刺，以免误伤延髓。".to_string(),
+                    flow_position: 0.35,
+                },
+                AcupointInfo {
+                    name: "肩井".to_string(),
+                    code: "GB21".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在肩胛区，第7颈椎棘突与肩峰最外侧点连线的中点。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["手足少阳、阳维脉交会".to_string(), "通络散结降气要穴".to_string()],
+                    indications: vec!["肩背痹痛".to_string(), "颈项强直".to_string(), "乳痈".to_string(), "乳汁不下".to_string(), "难产".to_string(), "瘰疬".to_string()],
+                    manipulation: "直刺0.5-0.8寸，深刺极易刺伤肺尖造成气胸。孕妇禁针。".to_string(),
+                    flow_position: 0.42,
+                },
+                AcupointInfo {
+                    name: "环跳".to_string(),
+                    code: "GB30".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在臀区，股骨大转子最凸点与骶管裂孔连线的外1/3与内2/3交点处。侧卧屈股取穴。".to_string(),
+                    origin_classic: "《素问·气府论》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["足少阳与足太阳交会穴".to_string(), "坐骨神经痛第一要穴".to_string(), "回阳九针穴".to_string()],
+                    indications: vec!["腰腿痛".to_string(), "下肢痿痹".to_string(), "半身不遂".to_string(), "风疹".to_string()],
+                    manipulation: "直刺2.0-3.0寸。".to_string(),
+                    flow_position: 0.65,
+                },
+                AcupointInfo {
+                    name: "风市".to_string(),
+                    code: "GB31".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在股部，髂胫束后缘，腘横纹上7寸。直立垂手，中指尖所指处。".to_string(),
+                    origin_classic: "《肘后备急方》".to_string(),
+                    specific_types: vec![SpecificAcupointType::Normal],
+                    specific_tags: vec!["祛风止痒要穴".to_string()],
+                    indications: vec!["下肢痿痹".to_string(), "麻木".to_string(), "半身不遂".to_string(), "全身瘙痒".to_string(), "瘾疹".to_string()],
+                    manipulation: "直刺1.0-2.0寸。".to_string(),
+                    flow_position: 0.72,
+                },
+                AcupointInfo {
+                    name: "阳陵泉".to_string(),
+                    code: "GB34".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在小腿外侧，腓骨头前下方凹陷中。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::XiaHeXue, SpecificAcupointType::BaHuiXue],
+                    specific_tags: vec!["合穴 (土)".to_string(), "胆下合穴".to_string(), "筋会阳陵泉".to_string(), "舒肝利胆名穴".to_string()],
+                    indications: vec!["黄疸".to_string(), "胁痛".to_string(), "口苦".to_string(), "呕吐".to_string(), "下肢痿痹".to_string(), "膝膑肿痛".to_string(), "脚气".to_string(), "小儿惊风".to_string()],
+                    manipulation: "直刺1.0-1.5寸。".to_string(),
+                    flow_position: 0.82,
+                },
+                AcupointInfo {
+                    name: "悬钟".to_string(),
+                    code: "GB39".to_string(),
+                    meridian_name: "足少阳胆经".to_string(),
+                    location: "在小腿外侧，外踝尖上3寸，腓骨前缘。".to_string(),
+                    origin_classic: "《针灸甲乙经》".to_string(),
+                    specific_types: vec![SpecificAcupointType::BaHuiXue],
+                    specific_tags: vec!["髓会绝骨 (悬钟)".to_string(), "补肾益髓要穴".to_string()],
+                    indications: vec!["痴呆".to_string(), "中风".to_string(), "半身不遂".to_string(), "颈项强痛".to_string(), "胸胁胀痛".to_string(), "下肢痿痹".to_string()],
+                    manipulation: "直刺1.0-1.5寸。".to_string(),
+                    flow_position: 0.92,
+                },
+            ],
+        },
+
+        // 14. 足厥阴肝经 (LR)
+        MeridianInfo {
+            name: "足厥阴肝经".to_string(),
+            code: "LR".to_string(),
+            category: MeridianCategory::ZuSanYin,
+            element: "木".to_string(),
+            paired_meridian: "足少阳胆经".to_string(),
+            peak_time: "丑时 (01:00 - 03:00)".to_string(),
+            course_description: "起于大指丛毛之际，上循足跗上廉，去内踝一寸，上踝八寸，交出太阴之后，上腘内廉，循股阴，入毛中，过阴器，抵小腹，挟胃，属肝，络胆，上贯膈，布胁肋，循喉咙之后，上入颃颡，连目系，上出额，与督脉会于巅。".to_string(),
+            acupoints: vec![
+                AcupointInfo {
+                    name: "大敦".to_string(),
+                    code: "LR1".to_string(),
+                    meridian_name: "足厥阴肝经".to_string(),
+                    location: "在足趾，大趾末节外侧，趾甲根角侧后方0.1寸。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["井穴 (木)".to_string(), "理疝固崩要穴".to_string()],
+                    indications: vec!["疝气".to_string(), "少腹痛".to_string(), "崩漏".to_string(), "月经过多".to_string(), "遗尿".to_string(), "癃闭".to_string(), "癫痫".to_string()],
+                    manipulation: "斜刺0.1-0.2寸，或点刺出血；治疝多用艾灸。".to_string(),
+                    flow_position: 0.05,
+                },
+                AcupointInfo {
+                    name: "行间".to_string(),
+                    code: "LR2".to_string(),
+                    meridian_name: "足厥阴肝经".to_string(),
+                    location: "在足背，第1、第2趾间，趾蹼缘后方赤白肉际处。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue],
+                    specific_tags: vec!["荥穴 (火)".to_string(), "清泻肝胆之火要穴".to_string()],
+                    indications: vec!["头痛".to_string(), "目赤肿痛".to_string(), "青盲".to_string(), "口㖞".to_string(), "胁痛".to_string(), "青光眼".to_string(), "月经不调".to_string(), "失眠".to_string()],
+                    manipulation: "斜刺0.5-0.8寸。".to_string(),
+                    flow_position: 0.20,
+                },
+                AcupointInfo {
+                    name: "太冲".to_string(),
+                    code: "LR3".to_string(),
+                    meridian_name: "足厥阴肝经".to_string(),
+                    location: "在足背，第1、第2跖骨间，跖骨底结合部前方凹陷中，或触及动脉搏动处。".to_string(),
+                    origin_classic: "《灵枢·本输》".to_string(),
+                    specific_types: vec![SpecificAcupointType::WuShuXue, SpecificAcupointType::YuanXue],
+                    specific_tags: vec!["输穴 (土)".to_string(), "原穴".to_string(), "四关穴".to_string(), "平肝息风第一穴".to_string()],
+                    indications: vec!["头痛".to_string(), "眩晕".to_string(), "失眠".to_string(), "郁证".to_string(), "高血压".to_string(), "目赤肿痛".to_string(), "口㖞".to_string(), "胁痛".to_string(), "小儿惊风".to_string()],
+                    manipulation: "直刺0.5-0.8寸。".to_string(),
+                    flow_position: 0.35,
+                },
+                AcupointInfo {
+                    name: "期门".to_string(),
+                    code: "LR14".to_string(),
+                    meridian_name: "足厥阴肝经".to_string(),
+                    location: "在胸部，第6肋间隙，前正中线旁开4寸。".to_string(),
+                    origin_classic: "《伤寒论》".to_string(),
+                    specific_types: vec![SpecificAcupointType::MuXue],
+                    specific_tags: vec!["肝之募穴".to_string(), "足厥阴、太阴、阴维交会".to_string(), "疏肝理气主穴".to_string()],
+                    indications: vec!["胸胁胀痛".to_string(), "呕吐".to_string(), "呃逆".to_string(), "吞酸".to_string(), "腹胀".to_string(), "乳痈".to_string(), "抑郁".to_string()],
+                    manipulation: "斜刺0.5-0.8寸。不可深刺，防伤及肝脾脏器。".to_string(),
+                    flow_position: 1.00,
+                },
+            ],
+        },
     ]
 }
 
@@ -474,9 +1138,121 @@ pub fn find_acupoint(name: &str) -> Option<AcupointInfo> {
     None
 }
 
-/// 依据临床病症症状快速智能推荐对偶穴位组合 (穴位处方)
+/// 获取系统内建的经典配穴处方与机理知识库
+pub fn get_canonical_acupoint_pairs() -> Vec<AcupointPairFormula> {
+    vec![
+        AcupointPairFormula {
+            name: "四关开窍方".to_string(),
+            principle: PairPrinciple::TongMing,
+            points: vec!["合谷".to_string(), "太冲".to_string()],
+            efficacy: "平肝息风，开窍镇痛，通调一身之气血。".to_string(),
+            mechanism: "合谷为手阳明大肠经原穴，气之主宰；太冲为足厥阴肝经原穴，血之关键。二手二足，气血并调，升降协调，通经止痛。".to_string(),
+            indications: vec!["头痛".to_string(), "失眠".to_string(), "眩晕".to_string(), "面瘫".to_string(), "郁证".to_string(), "癫狂".to_string()],
+            origin_classic: "《标幽赋》：“寒热痹痛，开四关而即安。”".to_string(),
+        },
+        AcupointPairFormula {
+            name: "公孙内关配穴 (心胸胃症)".to_string(),
+            principle: PairPrinciple::BaMaiJiaoHui,
+            points: vec!["内关".to_string(), "公孙".to_string()],
+            efficacy: "和胃降逆，理气宽胸，宁心安神。".to_string(),
+            mechanism: "公孙通冲脉，内关通阴维脉。二穴上下相呼应，主治心、胸、胃部疾患，是八脉交会穴中“公孙冲脉胃心胸，内关阴维下合通”之经典体现。".to_string(),
+            indications: vec!["胃痛".to_string(), "呕吐".to_string(), "胸闷".to_string(), "心悸".to_string(), "腹胀".to_string(), "呃逆".to_string()],
+            origin_classic: "《针灸大成·八脉图并治症说》".to_string(),
+        },
+        AcupointPairFormula {
+            name: "后溪申脉配穴 (头项目项症)".to_string(),
+            principle: PairPrinciple::BaMaiJiaoHui,
+            points: vec!["后溪".to_string(), "申脉".to_string()],
+            efficacy: "通督舒筋，清头明目，镇静安神。".to_string(),
+            mechanism: "后溪通督脉，申脉通阳跷脉。两穴相配，善于疏通督脉与太阳经之经气，主治目内眦、颈项、耳、肩胛及腰脊疼痛。".to_string(),
+            indications: vec!["颈项强痛".to_string(), "头痛".to_string(), "腰背痛".to_string(), "癫痫".to_string(), "目赤肿痛".to_string()],
+            origin_classic: "《八脉交会八穴歌》：“后溪督脉寻脊膂，申脉阳跷骨外取。”".to_string(),
+        },
+        AcupointPairFormula {
+            name: "胃腑俞募配穴方".to_string(),
+            principle: PairPrinciple::ShuMu,
+            points: vec!["中脘".to_string(), "胃俞".to_string()],
+            efficacy: "调和胃气，降逆止痛，培补中焦。".to_string(),
+            mechanism: "中脘为胃之募穴（前），胃俞为胃之背俞穴（后）。阴阳表里相应，“从阴引阳，从阳引阴”，专治胃腑虚实寒热诸疾。".to_string(),
+            indications: vec!["胃痛".to_string(), "反胃".to_string(), "呕吐".to_string(), "腹胀".to_string(), "消化不良".to_string()],
+            origin_classic: "《素问·阴阳应象大论》：“审其阴阳，以别柔刚，阳病治阴，阴病治阳。”".to_string(),
+        },
+        AcupointPairFormula {
+            name: "肺脏俞募配穴方".to_string(),
+            principle: PairPrinciple::ShuMu,
+            points: vec!["中府".to_string(), "肺俞".to_string()],
+            efficacy: "宣肺理气，止咳平喘，清热化痰。".to_string(),
+            mechanism: "中府为肺募（胸前），肺俞为背俞（背后）。前后同调，宣降兼施，宣通肺卫，降逆平喘。".to_string(),
+            indications: vec!["咳嗽".to_string(), "气喘".to_string(), "胸满痛".to_string(), "咳血".to_string(), "骨蒸潮热".to_string()],
+            origin_classic: "《难经·六十七难》：“俞募皆主治疾。”".to_string(),
+        },
+        AcupointPairFormula {
+            name: "肺大肠原络配穴方".to_string(),
+            principle: PairPrinciple::YuanLuo,
+            points: vec!["太渊".to_string(), "偏历".to_string()],
+            efficacy: "宣肺解表，通腑化浊，利水通便。".to_string(),
+            mechanism: "太渊为肺经原穴为主，偏历为大肠经络穴为客。肺与大肠相表里，主客相配，可治肺实热导致的咳喘兼大便秘结。".to_string(),
+            indications: vec!["咳嗽".to_string(), "咽喉肿痛".to_string(), "便秘".to_string(), "气喘".to_string(), "手腕痛".to_string()],
+            origin_classic: "《灵枢·经脉》原络主客配穴法".to_string(),
+        },
+        AcupointPairFormula {
+            name: "心胆相济配穴方 (神门 + 风池)".to_string(),
+            principle: PairPrinciple::JuBuYuanDuan,
+            points: vec!["神门".to_string(), "风池".to_string()],
+            efficacy: "清心降火，平熄肝风，安神定志。".to_string(),
+            mechanism: "神门宁心安神，风池疏风清脑。上取风池以清头目，下取神门以安心神，神得安则志自宁。".to_string(),
+            indications: vec!["失眠".to_string(), "头痛".to_string(), "心悸".to_string(), "眩晕".to_string(), "焦虑".to_string()],
+            origin_classic: "《席弘赋》".to_string(),
+        },
+        AcupointPairFormula {
+            name: "脾胃同调配穴方 (足三里 + 阴陵泉)".to_string(),
+            principle: PairPrinciple::BiaoLi,
+            points: vec!["足三里".to_string(), "阴陵泉".to_string()],
+            efficacy: "健脾和胃，利湿消肿，培补后天。".to_string(),
+            mechanism: "足三里升阳益胃，阴陵泉健脾利湿。一阴一阳，表里相合，健脾除湿，升清降浊。".to_string(),
+            indications: vec!["水肿".to_string(), "泄泻".to_string(), "腹胀".to_string(), "食欲不振".to_string(), "身重困倦".to_string()],
+            origin_classic: "《灵枢·本输》表里原合配穴法".to_string(),
+        },
+        AcupointPairFormula {
+            name: "少阳枢机对配方 (支沟 + 阳陵泉)".to_string(),
+            principle: PairPrinciple::TongMing,
+            points: vec!["支沟".to_string(), "阳陵泉".to_string()],
+            efficacy: "运转少阳，疏肝利胆，通达三焦。".to_string(),
+            mechanism: "手足少阳经同气相求，支沟疏通三焦气化，阳陵泉调畅胆府气机。二穴合用是治疗胁肋痛、便秘的经典经验穴组。".to_string(),
+            indications: vec!["胁肋痛".to_string(), "便秘".to_string(), "口苦".to_string(), "呕吐".to_string(), "胆绞痛".to_string()],
+            origin_classic: "《玉龙歌》：“胁痛何由引得来，只因少阳气结开；支沟阳陵并下针，管教患者笑颜开。”".to_string(),
+        },
+    ]
+}
+
+/// 依据临床病症推荐配穴处方
+pub fn recommend_pairs_for_symptom(symptom: &str) -> Vec<AcupointPairFormula> {
+    let clean = symptom.trim();
+    if clean.is_empty() {
+        return Vec::new();
+    }
+
+    let pairs = get_canonical_acupoint_pairs();
+    pairs
+        .into_iter()
+        .filter(|formula| {
+            formula.name.contains(clean)
+                || formula.efficacy.contains(clean)
+                || formula.mechanism.contains(clean)
+                || formula
+                    .indications
+                    .iter()
+                    .any(|ind| ind.contains(clean) || clean.contains(ind))
+        })
+        .collect()
+}
+
+/// 依据临床病症症状快速智能推荐穴位
 pub fn recommend_acupoints_for_symptom(symptom: &str) -> Vec<AcupointInfo> {
     let clean = symptom.trim();
+    if clean.is_empty() {
+        return Vec::new();
+    }
     let mut hits = Vec::new();
 
     for meridian in get_meridian_knowledge_base() {
@@ -494,6 +1270,207 @@ pub fn recommend_acupoints_for_symptom(symptom: &str) -> Vec<AcupointInfo> {
     hits
 }
 
+/// 依据穴位名称与代码智能推导其人体解剖部形与正面/背面归一化 2D 坐标 (0..100)
+pub fn deduce_body_location(name: &str, code: &str) -> BodyLocation {
+    let (region, aspect, coords) = match name {
+        // 头面项部 (Head & Neck)
+        "百会" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (50.0, 5.0)),
+        "大椎" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (50.0, 15.0)),
+        "风池" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (44.0, 11.0)),
+        "攒竹" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.0, 6.5)),
+        "睛明" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (49.0, 7.5)),
+        "承泣" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.5, 8.5)),
+        "四白" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.5, 9.5)),
+        "地仓" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (47.0, 12.0)),
+        "颊车" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (43.0, 12.5)),
+        "下关" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (43.5, 10.5)),
+        "迎香" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (47.5, 10.5)),
+        "听宫" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (42.0, 9.8)),
+        "水沟" | "人中" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 11.2)),
+        "神庭" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 5.5)),
+        "印堂" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 7.0)),
+        "丝竹空" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (44.0, 7.2)),
+        "廉泉" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 15.0)),
+
+        // 胸腹部 (Chest & Abdomen)
+        "中府" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (38.0, 22.0)),
+        "膻中" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 26.0)),
+        "巨阙" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 32.0)),
+        "中脘" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 36.0)),
+        "下脘" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 40.0)),
+        "神阙" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 43.0)),
+        "气海" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 46.0)),
+        "关元" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 49.0)),
+        "中极" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 52.0)),
+        "天枢" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 43.0)),
+        "梁门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 36.0)),
+        "大巨" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 47.0)),
+        "水道" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 50.0)),
+        "归来" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 52.5)),
+        "大横" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (38.0, 43.0)),
+        "期门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (42.0, 32.0)),
+        "日月" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (42.0, 34.0)),
+        "章门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (36.0, 38.0)),
+        "京门" => (
+            BodyRegion::ChestAbdomen,
+            BodyAspect::Posterior,
+            (36.0, 40.0),
+        ),
+
+        // 腰背骶部 (Back & Lumbar)
+        "命门" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 44.0)),
+        "腰阳关" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 48.0)),
+        "身柱" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 21.0)),
+        "肺俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 21.5)),
+        "心俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 25.0)),
+        "膈俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 29.0)),
+        "肝俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 33.0)),
+        "胆俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 35.0)),
+        "脾俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 37.5)),
+        "胃俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 39.5)),
+        "肾俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 44.0)),
+        "大肠俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 48.0)),
+        "膀胱俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 52.0)),
+        "八髎" | "上髎" | "次髎" => {
+            (BodyRegion::BackWaist, BodyAspect::Posterior, (47.0, 52.5))
+        }
+        "膏肓" => (BodyRegion::BackWaist, BodyAspect::Posterior, (40.0, 23.5)),
+        "肩井" => (BodyRegion::BackWaist, BodyAspect::Posterior, (38.0, 16.0)),
+
+        // 上肢部 (Upper Limb)
+        "尺泽" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (27.0, 35.0)),
+        "孔最" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 40.0)),
+        "列缺" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.0, 45.0)),
+        "太渊" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (21.0, 47.0)),
+        "鱼际" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (20.0, 49.0)),
+        "少商" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (18.5, 52.0)),
+        "商阳" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.5, 52.0)),
+        "合谷" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (20.5, 48.0)),
+        "手三里" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (25.0, 38.0)),
+        "曲池" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (27.0, 34.0)),
+        "肩髃" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (33.0, 20.0)),
+        "极泉" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (36.0, 24.0)),
+        "少海" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (28.0, 35.0)),
+        "通里" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (23.0, 45.0)),
+        "神门" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.0, 47.0)),
+        "少冲" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (18.0, 52.5)),
+        "少泽" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.0, 52.5)),
+        "后溪" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (19.5, 49.0)),
+        "养老" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (22.0, 46.5)),
+        "小海" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (28.0, 35.0)),
+        "天宗" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (39.0, 23.0)),
+        "曲泽" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (27.5, 35.0)),
+        "郄门" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 41.0)),
+        "间使" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (23.5, 44.0)),
+        "内关" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.5, 45.5)),
+        "大陵" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (21.5, 47.0)),
+        "劳宫" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (19.5, 49.5)),
+        "中冲" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (17.5, 52.5)),
+        "关冲" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.0, 52.0)),
+        "中渚" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (19.8, 48.5)),
+        "阳池" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (21.5, 47.0)),
+        "外关" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (22.5, 45.0)),
+        "支沟" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (23.5, 43.5)),
+        "天井" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (28.5, 34.0)),
+
+        // 下肢部 (Lower Limb)
+        "承扶" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 57.0)),
+        "殷门" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 63.0)),
+        "委阳" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (42.5, 69.0)),
+        "委中" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 70.0)),
+        "承山" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 79.0)),
+        "飞扬" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (42.0, 82.0)),
+        "昆仑" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (41.5, 89.0)),
+        "申脉" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (41.0, 91.0)),
+        "至阴" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (39.0, 96.0)),
+        "梁丘" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 64.0)),
+        "犊鼻" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.5, 68.0)),
+        "足三里" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 73.0)),
+        "上巨虚" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 77.0)),
+        "条口" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 80.0)),
+        "下巨虚" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 82.0)),
+        "丰隆" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.0, 81.0)),
+        "解溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (44.0, 89.0)),
+        "内庭" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.5, 94.0)),
+        "历兑" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 96.5)),
+        "隐白" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (48.0, 96.5)),
+        "大都" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.5, 95.0)),
+        "太白" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.0, 93.5)),
+        "公孙" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 91.5)),
+        "三阴交" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 84.0)),
+        "地机" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 77.0)),
+        "阴陵泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 70.0)),
+        "血海" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 64.0)),
+        "涌泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.0, 96.0)),
+        "然谷" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 93.0)),
+        "太溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 89.5)),
+        "大钟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 91.0)),
+        "照海" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 91.5)),
+        "复溜" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 86.0)),
+        "阴谷" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (46.0, 69.5)),
+        "环跳" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (36.0, 54.0)),
+        "风市" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (38.0, 63.0)),
+        "阳陵泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 71.0)),
+        "光明" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 80.0)),
+        "悬钟" | "绝骨" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 84.0)),
+        "丘墟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.0, 89.5)),
+        "足临泣" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.5, 93.0)),
+        "侠溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.5, 95.0)),
+        "足窍阴" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.0, 96.5)),
+        "大敦" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.0, 96.5)),
+        "行间" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 95.0)),
+        "太冲" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 92.5)),
+        "中封" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.5, 89.0)),
+        "蠡沟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 82.5)),
+        "曲泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 69.0)),
+
+        _ => {
+            if code.starts_with("LU") || code.starts_with("PC") || code.starts_with("HT") {
+                (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 40.0))
+            } else if code.starts_with("LI") || code.starts_with("TE") || code.starts_with("SI") {
+                (BodyRegion::UpperLimb, BodyAspect::Posterior, (25.0, 40.0))
+            } else if code.starts_with("ST")
+                || code.starts_with("SP")
+                || code.starts_with("KI")
+                || code.starts_with("LR")
+            {
+                (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.0, 75.0))
+            } else if code.starts_with("BL") || code.starts_with("GB") {
+                (BodyRegion::LowerLimb, BodyAspect::Posterior, (43.0, 75.0))
+            } else if code.starts_with("GV") {
+                (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 30.0))
+            } else {
+                (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 35.0))
+            }
+        }
+    };
+
+    BodyLocation {
+        region,
+        aspect,
+        coords,
+    }
+}
+
+/// 依据解剖部形与体表正反面筛选穴位列表（附带部形定位）
+pub fn get_acupoints_by_region(
+    region: Option<BodyRegion>,
+    aspect: Option<BodyAspect>,
+) -> Vec<(AcupointInfo, BodyLocation)> {
+    let mut results = Vec::new();
+    for m in get_meridian_knowledge_base() {
+        for pt in m.acupoints {
+            let loc = pt.get_body_location();
+            let match_region = region.is_none() || Some(loc.region) == region;
+            let match_aspect = aspect.is_none() || Some(loc.aspect) == aspect;
+            if match_region && match_aspect {
+                results.push((pt, loc));
+            }
+        }
+    }
+    results
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -501,8 +1478,10 @@ mod tests {
     #[test]
     fn test_meridian_knowledge_base_load() {
         let base = get_meridian_knowledge_base();
-        assert!(!base.is_empty());
+        assert_eq!(base.len(), 14);
         assert!(base.iter().any(|m| m.name == "足阳明胃经"));
+        assert!(base.iter().any(|m| m.name == "手厥阴心包经"));
+        assert!(base.iter().any(|m| m.name == "足厥阴肝经"));
     }
 
     #[test]
@@ -513,6 +1492,17 @@ mod tests {
         assert_eq!(pt.code, "ST36");
         assert_eq!(pt.meridian_name, "足阳明胃经");
         assert!(pt.specific_tags.iter().any(|t| t.contains("肚腹三里留")));
+        let loc = pt.get_body_location();
+        assert_eq!(loc.region, BodyRegion::LowerLimb);
+        assert_eq!(loc.aspect, BodyAspect::Anterior);
+
+        let neiguan = find_acupoint("内关");
+        assert!(neiguan.is_some());
+        let ng = neiguan.unwrap();
+        assert_eq!(ng.code, "PC6");
+        let ng_loc = ng.get_body_location();
+        assert_eq!(ng_loc.region, BodyRegion::UpperLimb);
+        assert_eq!(ng_loc.aspect, BodyAspect::Anterior);
     }
 
     #[test]
@@ -521,5 +1511,34 @@ mod tests {
         assert!(!hits.is_empty());
         assert!(hits.iter().any(|p| p.name == "足三里"));
         assert!(hits.iter().any(|p| p.name == "中脘"));
+        assert!(hits.iter().any(|p| p.name == "内关"));
+    }
+
+    #[test]
+    fn test_acupoint_body_location_filter() {
+        let head_points = get_acupoints_by_region(Some(BodyRegion::HeadNeck), None);
+        assert!(!head_points.is_empty());
+        assert!(head_points.iter().any(|(p, _)| p.name == "百会"));
+        assert!(head_points.iter().any(|(p, _)| p.name == "风池"));
+
+        let chest_ant =
+            get_acupoints_by_region(Some(BodyRegion::ChestAbdomen), Some(BodyAspect::Anterior));
+        assert!(!chest_ant.is_empty());
+        assert!(chest_ant.iter().any(|(p, _)| p.name == "中脘"));
+    }
+
+    #[test]
+    fn test_canonical_acupoint_pairs() {
+        let pairs = get_canonical_acupoint_pairs();
+        assert!(!pairs.is_empty());
+        let siguan = pairs.iter().find(|p| p.name.contains("四关"));
+        assert!(siguan.is_some());
+        assert_eq!(siguan.unwrap().points, vec!["合谷", "太冲"]);
+
+        let stomach_pairs = recommend_pairs_for_symptom("胃痛");
+        assert!(!stomach_pairs.is_empty());
+        assert!(stomach_pairs
+            .iter()
+            .any(|p| p.name.contains("公孙内关") || p.name.contains("胃腑俞募")));
     }
 }
