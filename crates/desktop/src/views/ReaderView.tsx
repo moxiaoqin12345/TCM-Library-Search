@@ -87,8 +87,8 @@ export default function ReaderView(props: ReaderViewProps) {
   // 图书馆书目数据（基于典籍体系）
   const [books, setBooks] = createSignal<BookInfo[]>([
     {
-      id: "yaodian_2025",
-      title: "中国药典（2025年版）",
+      id: "中国药典（2025年版）一部",
+      title: "中国药典（2025年版）一部",
       author: "国家药典委员会",
       dynasty: "现代",
       description: "国家药品法定标准，收录常用中药材及中药饮片、成方制剂与单味制剂，具备权威性与临床指导价值。",
@@ -98,7 +98,7 @@ export default function ReaderView(props: ReaderViewProps) {
       coverText: "药典",
     },
     {
-      id: "shanghanlun",
+      id: "伤寒论",
       title: "伤寒论",
       author: "张仲景",
       dynasty: "东汉",
@@ -109,8 +109,8 @@ export default function ReaderView(props: ReaderViewProps) {
       coverText: "伤寒",
     },
     {
-      id: "neijing_suwen",
-      title: "黄帝内经·素问",
+      id: "黄帝内经素问",
+      title: "黄帝内经素问",
       author: "先贤遗著",
       dynasty: "先秦至汉",
       description: "中医学理论思想渊薮，详述阴阳五行、脏腑经络、养生摄生与天人相应理论根基。",
@@ -120,8 +120,8 @@ export default function ReaderView(props: ReaderViewProps) {
       coverText: "内经",
     },
     {
-      id: "zhenjiuxue",
-      title: "针灸学·经穴总览",
+      id: "针灸学",
+      title: "针灸学",
       author: "历代经穴集成",
       dynasty: "经典合编",
       description: "阐发十二经脉、奇经八脉走行动向与常用特定腧穴定位主治，融汇针石灸法精义。",
@@ -131,7 +131,7 @@ export default function ReaderView(props: ReaderViewProps) {
       coverText: "针灸",
     },
   ]);
-  const [selectedBookId, setSelectedBookId] = createSignal<string>("yaodian_2025");
+  const [selectedBookId, setSelectedBookId] = createSignal<string>("中国药典（2025年版）一部");
   // 当前正在点读的书籍章节树
   const [activeBookTree, setActiveBookTree] = createSignal<BookSummaryItem | null>(null);
 

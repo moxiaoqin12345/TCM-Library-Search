@@ -5,9 +5,9 @@ use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
     check_herb_compatibility, diff_texts, find_acupoint, get_meridian_knowledge_base,
-    recommend_acupoints_for_symptom, AcupointInfo, BookSummaryItem, CategoryTreeItem,
-    CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery, SearchResultItem, TcmEntryDetail,
-    TextDiffResult,
+    locate_manifest_path, recommend_acupoints_for_symptom, AcupointInfo, BookSummaryItem,
+    CategoryTreeItem, CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery,
+    SearchResultItem, TcmEntryDetail, TextDiffResult,
 };
 
 /// 健康检查
@@ -157,13 +157,27 @@ fn recommend_acupoints(symptom: String) -> Vec<AcupointInfo> {
 }
 
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
+    // 1. 尝试从应用资源目录检索
     if let Ok(resource_dir) = app.path().resource_dir() {
-        let bundled = resource_dir.join("corpus");
-        if bundled.exists() {
-            return bundled;
+        if let Some(manifest) = locate_manifest_path(&resource_dir) {
+            if let Some(parent) = manifest.parent() {
+                return parent.to_path_buf();
+            }
         }
     }
 
+    // 2. 尝试从当前可执行文件所在目录检索（涵盖直接运行或安装目录）
+    if let Ok(exe_path) = std::env::current_exe() {
+        if let Some(exe_dir) = exe_path.parent() {
+            if let Some(manifest) = locate_manifest_path(exe_dir) {
+                if let Some(parent) = manifest.parent() {
+                    return parent.to_path_buf();
+                }
+            }
+        }
+    }
+
+    // 3. 开发环境相对路径回退检索
     let search_paths = [
         PathBuf::from("../../../corpus"),
         PathBuf::from("../../corpus"),
@@ -172,7 +186,7 @@ fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     ];
 
     for path in &search_paths {
-        if path.exists() {
+        if path.join("manifest.json").exists() || path.exists() {
             return path.canonicalize().unwrap_or_else(|_| path.clone());
         }
     }

@@ -178,9 +178,43 @@ impl CorpusIndex {
     /// 查询特定书目的章节树
     pub fn get_book_chapter_tree(&self, target_book: &str) -> Option<BookSummaryItem> {
         let books = self.list_books();
-        books
-            .into_iter()
-            .find(|b| b.book_name == target_book || b.book_name.contains(target_book))
+        let target_trimmed = target_book.trim();
+        let target_lower = target_trimmed.to_lowercase();
+
+        // 1. 精确匹配或直接包含
+        if let Some(matched) = books.iter().find(|b| {
+            b.book_name == target_trimmed
+                || b.book_name.contains(target_trimmed)
+                || target_trimmed.contains(&b.book_name)
+        }) {
+            return Some(matched.clone());
+        }
+
+        // 2. 别名与拼音标识容错匹配
+        books.into_iter().find(|b| {
+            let name = &b.book_name;
+            if (target_lower.contains("yaodian") || target_lower.contains("yd"))
+                && name.contains("药典")
+            {
+                return true;
+            }
+            if (target_lower.contains("shanghan") || target_lower.contains("shl"))
+                && name.contains("伤寒")
+            {
+                return true;
+            }
+            if (target_lower.contains("neijing") || target_lower.contains("suwen"))
+                && (name.contains("内经") || name.contains("素问"))
+            {
+                return true;
+            }
+            if (target_lower.contains("zhenjiu") || target_lower.contains("zjx"))
+                && name.contains("针灸")
+            {
+                return true;
+            }
+            false
+        })
     }
 }
 
@@ -189,6 +223,12 @@ pub fn locate_manifest_path(start_dir: &Path) -> Option<PathBuf> {
     let candidates = [
         start_dir.join("manifest.json"),
         start_dir.join("corpus").join("manifest.json"),
+        start_dir
+            .join("_up_")
+            .join("_up_")
+            .join("_up_")
+            .join("corpus")
+            .join("manifest.json"),
         start_dir.join("..").join("corpus").join("manifest.json"),
         start_dir
             .join("..")
