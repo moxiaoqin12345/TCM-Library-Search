@@ -4,11 +4,12 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    check_herb_compatibility, diff_texts, find_acupoint, get_canonical_acupoint_pairs,
+    check_herb_compatibility, diff_texts, find_acupoint, get_acupoints_by_region,
+    get_canonical_acupoint_pairs, get_canonical_formula_graphs, get_knowledge_graph_for_term,
     get_meridian_knowledge_base, locate_manifest_path, recommend_acupoints_for_symptom,
-    recommend_pairs_for_symptom, AcupointInfo, AcupointPairFormula, BookSummaryItem,
-    CategoryTreeItem, CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery,
-    SearchResultItem, TcmEntryDetail, TextDiffResult,
+    recommend_pairs_for_symptom, AcupointInfo, AcupointPairFormula, BodyAspect, BodyLocation,
+    BodyRegion, BookSummaryItem, CategoryTreeItem, CompatibilityAlert, CorpusStatus,
+    KnowledgeGraph, MeridianInfo, SearchQuery, SearchResultItem, TcmEntryDetail, TextDiffResult,
 };
 
 /// 健康检查
@@ -169,6 +170,27 @@ fn recommend_acupoint_pairs(symptom: String) -> Vec<AcupointPairFormula> {
     recommend_pairs_for_symptom(&symptom)
 }
 
+/// 获取经典精选方剂知识图谱列表
+#[tauri::command]
+fn list_featured_knowledge_graphs() -> Vec<KnowledgeGraph> {
+    get_canonical_formula_graphs()
+}
+
+/// 根据方剂或中药词汇检索知识图谱
+#[tauri::command]
+fn get_knowledge_graph(term: String) -> Option<KnowledgeGraph> {
+    get_knowledge_graph_for_term(&term)
+}
+
+/// 按解剖部形与体表正反面筛选穴位定位
+#[tauri::command]
+fn list_acupoints_by_region(
+    region: Option<BodyRegion>,
+    aspect: Option<BodyAspect>,
+) -> Vec<(AcupointInfo, BodyLocation)> {
+    get_acupoints_by_region(region, aspect)
+}
+
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     // 1. 尝试从应用资源目录检索
     if let Ok(resource_dir) = app.path().resource_dir() {
@@ -241,6 +263,9 @@ pub fn run() {
             recommend_acupoints,
             list_acupoint_pairs,
             recommend_acupoint_pairs,
+            list_featured_knowledge_graphs,
+            get_knowledge_graph,
+            list_acupoints_by_region,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

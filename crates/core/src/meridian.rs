@@ -44,6 +44,42 @@ pub enum SpecificAcupointType {
     Normal,
 }
 
+/// 人体解剖部分大类 (部形)
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BodyRegion {
+    /// 头面颈项部 (Head & Neck)
+    #[default]
+    HeadNeck,
+    /// 胸腹部 (Chest & Abdomen)
+    ChestAbdomen,
+    /// 背腰骶部 (Back & Lumbar)
+    BackWaist,
+    /// 上肢部 (Upper Limb: 肩/臂/肘/腕/手)
+    UpperLimb,
+    /// 下肢部 (Lower Limb: 臀/股/膝/胫/足)
+    LowerLimb,
+}
+
+/// 人体体表正背侧面朝向
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Hash, Serialize, Deserialize, Default)]
+#[serde(rename_all = "snake_case")]
+pub enum BodyAspect {
+    /// 正面 (腹面 / 前侧)
+    #[default]
+    Anterior,
+    /// 背面 (背面 / 后侧)
+    Posterior,
+}
+
+/// 人体穴位 2D 坐标与部形定位数据
+#[derive(Debug, Clone, PartialEq, Serialize, Deserialize)]
+pub struct BodyLocation {
+    pub region: BodyRegion,
+    pub aspect: BodyAspect,
+    pub coords: (f64, f64),
+}
+
 /// 经典配穴原则
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
@@ -104,6 +140,13 @@ pub struct AcupointInfo {
     pub manipulation: String,
     /// 交互拓扑在经络循行上的相对分寸位置 (0.0 起始 ~ 1.0 终止)
     pub flow_position: f64,
+}
+
+impl AcupointInfo {
+    /// 获取穴位解剖部形与 2D 人体总图坐标
+    pub fn get_body_location(&self) -> BodyLocation {
+        deduce_body_location(&self.name, &self.code)
+    }
 }
 
 /// 经脉数据模型
@@ -1227,6 +1270,207 @@ pub fn recommend_acupoints_for_symptom(symptom: &str) -> Vec<AcupointInfo> {
     hits
 }
 
+/// 依据穴位名称与代码智能推导其人体解剖部形与正面/背面归一化 2D 坐标 (0..100)
+pub fn deduce_body_location(name: &str, code: &str) -> BodyLocation {
+    let (region, aspect, coords) = match name {
+        // 头面项部 (Head & Neck)
+        "百会" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (50.0, 5.0)),
+        "大椎" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (50.0, 15.0)),
+        "风池" => (BodyRegion::HeadNeck, BodyAspect::Posterior, (44.0, 11.0)),
+        "攒竹" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.0, 6.5)),
+        "睛明" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (49.0, 7.5)),
+        "承泣" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.5, 8.5)),
+        "四白" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (48.5, 9.5)),
+        "地仓" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (47.0, 12.0)),
+        "颊车" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (43.0, 12.5)),
+        "下关" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (43.5, 10.5)),
+        "迎香" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (47.5, 10.5)),
+        "听宫" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (42.0, 9.8)),
+        "水沟" | "人中" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 11.2)),
+        "神庭" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 5.5)),
+        "印堂" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 7.0)),
+        "丝竹空" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (44.0, 7.2)),
+        "廉泉" => (BodyRegion::HeadNeck, BodyAspect::Anterior, (50.0, 15.0)),
+
+        // 胸腹部 (Chest & Abdomen)
+        "中府" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (38.0, 22.0)),
+        "膻中" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 26.0)),
+        "巨阙" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 32.0)),
+        "中脘" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 36.0)),
+        "下脘" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 40.0)),
+        "神阙" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 43.0)),
+        "气海" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 46.0)),
+        "关元" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 49.0)),
+        "中极" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 52.0)),
+        "天枢" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 43.0)),
+        "梁门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 36.0)),
+        "大巨" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 47.0)),
+        "水道" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 50.0)),
+        "归来" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (44.0, 52.5)),
+        "大横" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (38.0, 43.0)),
+        "期门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (42.0, 32.0)),
+        "日月" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (42.0, 34.0)),
+        "章门" => (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (36.0, 38.0)),
+        "京门" => (
+            BodyRegion::ChestAbdomen,
+            BodyAspect::Posterior,
+            (36.0, 40.0),
+        ),
+
+        // 腰背骶部 (Back & Lumbar)
+        "命门" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 44.0)),
+        "腰阳关" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 48.0)),
+        "身柱" => (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 21.0)),
+        "肺俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 21.5)),
+        "心俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 25.0)),
+        "膈俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 29.0)),
+        "肝俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 33.0)),
+        "胆俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 35.0)),
+        "脾俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 37.5)),
+        "胃俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 39.5)),
+        "肾俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 44.0)),
+        "大肠俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 48.0)),
+        "膀胱俞" => (BodyRegion::BackWaist, BodyAspect::Posterior, (45.0, 52.0)),
+        "八髎" | "上髎" | "次髎" => {
+            (BodyRegion::BackWaist, BodyAspect::Posterior, (47.0, 52.5))
+        }
+        "膏肓" => (BodyRegion::BackWaist, BodyAspect::Posterior, (40.0, 23.5)),
+        "肩井" => (BodyRegion::BackWaist, BodyAspect::Posterior, (38.0, 16.0)),
+
+        // 上肢部 (Upper Limb)
+        "尺泽" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (27.0, 35.0)),
+        "孔最" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 40.0)),
+        "列缺" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.0, 45.0)),
+        "太渊" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (21.0, 47.0)),
+        "鱼际" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (20.0, 49.0)),
+        "少商" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (18.5, 52.0)),
+        "商阳" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.5, 52.0)),
+        "合谷" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (20.5, 48.0)),
+        "手三里" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (25.0, 38.0)),
+        "曲池" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (27.0, 34.0)),
+        "肩髃" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (33.0, 20.0)),
+        "极泉" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (36.0, 24.0)),
+        "少海" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (28.0, 35.0)),
+        "通里" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (23.0, 45.0)),
+        "神门" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.0, 47.0)),
+        "少冲" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (18.0, 52.5)),
+        "少泽" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.0, 52.5)),
+        "后溪" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (19.5, 49.0)),
+        "养老" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (22.0, 46.5)),
+        "小海" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (28.0, 35.0)),
+        "天宗" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (39.0, 23.0)),
+        "曲泽" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (27.5, 35.0)),
+        "郄门" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 41.0)),
+        "间使" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (23.5, 44.0)),
+        "内关" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (22.5, 45.5)),
+        "大陵" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (21.5, 47.0)),
+        "劳宫" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (19.5, 49.5)),
+        "中冲" => (BodyRegion::UpperLimb, BodyAspect::Anterior, (17.5, 52.5)),
+        "关冲" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (18.0, 52.0)),
+        "中渚" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (19.8, 48.5)),
+        "阳池" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (21.5, 47.0)),
+        "外关" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (22.5, 45.0)),
+        "支沟" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (23.5, 43.5)),
+        "天井" => (BodyRegion::UpperLimb, BodyAspect::Posterior, (28.5, 34.0)),
+
+        // 下肢部 (Lower Limb)
+        "承扶" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 57.0)),
+        "殷门" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 63.0)),
+        "委阳" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (42.5, 69.0)),
+        "委中" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 70.0)),
+        "承山" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (45.0, 79.0)),
+        "飞扬" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (42.0, 82.0)),
+        "昆仑" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (41.5, 89.0)),
+        "申脉" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (41.0, 91.0)),
+        "至阴" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (39.0, 96.0)),
+        "梁丘" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 64.0)),
+        "犊鼻" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.5, 68.0)),
+        "足三里" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 73.0)),
+        "上巨虚" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 77.0)),
+        "条口" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 80.0)),
+        "下巨虚" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 82.0)),
+        "丰隆" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.0, 81.0)),
+        "解溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (44.0, 89.0)),
+        "内庭" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.5, 94.0)),
+        "历兑" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (43.0, 96.5)),
+        "隐白" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (48.0, 96.5)),
+        "大都" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.5, 95.0)),
+        "太白" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.0, 93.5)),
+        "公孙" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 91.5)),
+        "三阴交" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 84.0)),
+        "地机" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 77.0)),
+        "阴陵泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 70.0)),
+        "血海" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 64.0)),
+        "涌泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.0, 96.0)),
+        "然谷" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 93.0)),
+        "太溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 89.5)),
+        "大钟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 91.0)),
+        "照海" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 91.5)),
+        "复溜" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 86.0)),
+        "阴谷" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (46.0, 69.5)),
+        "环跳" => (BodyRegion::LowerLimb, BodyAspect::Posterior, (36.0, 54.0)),
+        "风市" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (38.0, 63.0)),
+        "阳陵泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 71.0)),
+        "光明" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 80.0)),
+        "悬钟" | "绝骨" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (41.5, 84.0)),
+        "丘墟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.0, 89.5)),
+        "足临泣" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.5, 93.0)),
+        "侠溪" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.5, 95.0)),
+        "足窍阴" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (42.0, 96.5)),
+        "大敦" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (47.0, 96.5)),
+        "行间" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 95.0)),
+        "太冲" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 92.5)),
+        "中封" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.5, 89.0)),
+        "蠡沟" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.0, 82.5)),
+        "曲泉" => (BodyRegion::LowerLimb, BodyAspect::Anterior, (46.5, 69.0)),
+
+        _ => {
+            if code.starts_with("LU") || code.starts_with("PC") || code.starts_with("HT") {
+                (BodyRegion::UpperLimb, BodyAspect::Anterior, (25.0, 40.0))
+            } else if code.starts_with("LI") || code.starts_with("TE") || code.starts_with("SI") {
+                (BodyRegion::UpperLimb, BodyAspect::Posterior, (25.0, 40.0))
+            } else if code.starts_with("ST")
+                || code.starts_with("SP")
+                || code.starts_with("KI")
+                || code.starts_with("LR")
+            {
+                (BodyRegion::LowerLimb, BodyAspect::Anterior, (45.0, 75.0))
+            } else if code.starts_with("BL") || code.starts_with("GB") {
+                (BodyRegion::LowerLimb, BodyAspect::Posterior, (43.0, 75.0))
+            } else if code.starts_with("GV") {
+                (BodyRegion::BackWaist, BodyAspect::Posterior, (50.0, 30.0))
+            } else {
+                (BodyRegion::ChestAbdomen, BodyAspect::Anterior, (50.0, 35.0))
+            }
+        }
+    };
+
+    BodyLocation {
+        region,
+        aspect,
+        coords,
+    }
+}
+
+/// 依据解剖部形与体表正反面筛选穴位列表（附带部形定位）
+pub fn get_acupoints_by_region(
+    region: Option<BodyRegion>,
+    aspect: Option<BodyAspect>,
+) -> Vec<(AcupointInfo, BodyLocation)> {
+    let mut results = Vec::new();
+    for m in get_meridian_knowledge_base() {
+        for pt in m.acupoints {
+            let loc = pt.get_body_location();
+            let match_region = region.is_none() || Some(loc.region) == region;
+            let match_aspect = aspect.is_none() || Some(loc.aspect) == aspect;
+            if match_region && match_aspect {
+                results.push((pt, loc));
+            }
+        }
+    }
+    results
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
@@ -1248,10 +1492,17 @@ mod tests {
         assert_eq!(pt.code, "ST36");
         assert_eq!(pt.meridian_name, "足阳明胃经");
         assert!(pt.specific_tags.iter().any(|t| t.contains("肚腹三里留")));
+        let loc = pt.get_body_location();
+        assert_eq!(loc.region, BodyRegion::LowerLimb);
+        assert_eq!(loc.aspect, BodyAspect::Anterior);
 
         let neiguan = find_acupoint("内关");
         assert!(neiguan.is_some());
-        assert_eq!(neiguan.unwrap().code, "PC6");
+        let ng = neiguan.unwrap();
+        assert_eq!(ng.code, "PC6");
+        let ng_loc = ng.get_body_location();
+        assert_eq!(ng_loc.region, BodyRegion::UpperLimb);
+        assert_eq!(ng_loc.aspect, BodyAspect::Anterior);
     }
 
     #[test]
@@ -1261,6 +1512,19 @@ mod tests {
         assert!(hits.iter().any(|p| p.name == "足三里"));
         assert!(hits.iter().any(|p| p.name == "中脘"));
         assert!(hits.iter().any(|p| p.name == "内关"));
+    }
+
+    #[test]
+    fn test_acupoint_body_location_filter() {
+        let head_points = get_acupoints_by_region(Some(BodyRegion::HeadNeck), None);
+        assert!(!head_points.is_empty());
+        assert!(head_points.iter().any(|(p, _)| p.name == "百会"));
+        assert!(head_points.iter().any(|(p, _)| p.name == "风池"));
+
+        let chest_ant =
+            get_acupoints_by_region(Some(BodyRegion::ChestAbdomen), Some(BodyAspect::Anterior));
+        assert!(!chest_ant.is_empty());
+        assert!(chest_ant.iter().any(|(p, _)| p.name == "中脘"));
     }
 
     #[test]

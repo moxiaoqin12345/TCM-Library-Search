@@ -40,6 +40,7 @@ import { TermPopover } from "../components/TermPopover";
 import { CompatibilityRadar } from "../components/CompatibilityRadar";
 import { DiffModal } from "../components/DiffModal";
 import { MeridianPanel } from "../components/MeridianPanel";
+import { KnowledgeGraphPanel } from "../components/KnowledgeGraphPanel";
 import { highlightTcmKeywords } from "../utils/highlighter";
 import { exportEntryToMarkdown } from "../services/export";
 import {
@@ -481,8 +482,20 @@ export default function ReaderView(props: ReaderViewProps) {
         </div>
       </Show>
 
-      {/* 4. 常规双栏研读工作区（检索 / 书库 / 收藏 / 设置） */}
-      <Show when={activeNav() !== "home" && activeNav() !== "meridian"}>
+      {/* 4. 本草方剂配伍知识图谱工作台（当 activeNav === 'graph' 时独占主工作区） */}
+      <Show when={activeNav() === "graph"}>
+        <div style={{ flex: 1, height: "100%", overflow: "hidden" }}>
+          <KnowledgeGraphPanel
+            onSearchGlobal={(kw) => {
+              doSearch(kw, undefined, undefined);
+              setActiveNav("search");
+            }}
+          />
+        </div>
+      </Show>
+
+      {/* 5. 常规双栏研读工作区（检索 / 书库 / 收藏 / 设置） */}
+      <Show when={activeNav() !== "home" && activeNav() !== "meridian" && activeNav() !== "graph"}>
         <div class={styles.middlePanelWrapper}>
 
           <Show when={activeNav() === "search"}>

@@ -4,10 +4,14 @@ import {
   recommendAcupoints,
   listAcupointPairs,
   recommendAcupointPairs,
+  listAcupointsByRegion,
   AcupointInfo,
   MeridianInfo,
   AcupointPairFormula,
   SpecificAcupointType,
+  BodyRegion,
+  BodyAspect,
+  BodyLocation,
 } from "../services/api";
 import styles from "./MeridianPanel.module.css";
 
@@ -16,7 +20,7 @@ interface MeridianPanelProps {
   onSelectAcupoint?: (pointName: string) => void;
 }
 
-type MainTab = "meridians" | "pairs";
+type MainTab = "meridians" | "pairs" | "body";
 type MeridianCategoryFilter = "all" | "shou_san_yin" | "shou_san_yang" | "zu_san_yang" | "zu_san_yin" | "qi_jing_ba_mai";
 type SpecificFilter = "all" | SpecificAcupointType;
 
@@ -28,8 +32,13 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
   const [selectedPair, setSelectedPair] = createSignal<AcupointPairFormula | null>(null);
   const [isLoading, setIsLoading] = createSignal<boolean>(true);
 
-  // Tab 模式：经络穴位图谱 vs 经典对偶配穴
+  // Tab 模式：经络穴位图谱 vs 经典对偶配穴 vs 人体部形总图
   const [activeTab, setActiveTab] = createSignal<MainTab>("meridians");
+
+  // 人体部形总图状态
+  const [bodyAspect, setBodyAspect] = createSignal<BodyAspect>("anterior");
+  const [bodyRegion, setBodyRegion] = createSignal<BodyRegion | "all">("all");
+  const [regionalPoints, setRegionalPoints] = createSignal<[AcupointInfo, BodyLocation][]>([]);
 
   // 筛选过滤
   const [categoryFilter, setCategoryFilter] = createSignal<MeridianCategoryFilter>("all");
@@ -40,15 +49,26 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
   const [recommendedPoints, setRecommendedPoints] = createSignal<AcupointInfo[]>([]);
   const [recommendedPairs, setRecommendedPairs] = createSignal<AcupointPairFormula[]>([]);
 
+  const loadRegionalPoints = async (region?: BodyRegion, aspect?: BodyAspect) => {
+    try {
+      const data = await listAcupointsByRegion(region, aspect);
+      setRegionalPoints(data);
+    } catch (e) {
+      console.error("Failed to load regional acupoints:", e);
+    }
+  };
+
   onMount(async () => {
     setIsLoading(true);
     try {
-      const [meridianData, pairData] = await Promise.all([
+      const [meridianData, pairData, regData] = await Promise.all([
         listMeridians(),
         listAcupointPairs(),
+        listAcupointsByRegion(undefined, "anterior"),
       ]);
       setMeridians(meridianData);
       setAllPairs(pairData);
+      setRegionalPoints(regData);
 
       if (meridianData.length > 0) {
         setSelectedMeridian(meridianData[0]);
@@ -162,6 +182,17 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
             onClick={() => setActiveTab("pairs")}
           >
             经典配穴对方
+          </button>
+          <button
+            type="button"
+            class={`${styles.mainTabBtn} ${activeTab() === "body" ? styles.mainTabBtnActive : ""}`}
+            onClick={() => {
+              setActiveTab("body");
+              const reg = bodyRegion();
+              loadRegionalPoints(reg === "all" ? undefined : reg, bodyAspect());
+            }}
+          >
+            人体部形
           </button>
         </div>
 
@@ -360,11 +391,44 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
               }}
             </For>
           </Show>
+
+          {/* 人体部形穴位列表 */}
+          <Show when={activeTab() === "body"}>
+            <div style={{ padding: "0.5rem 0.8rem 0.3rem", "font-size": "0.78rem", color: "var(--text-muted)", "border-bottom": "1px solid var(--border-subtle)", display: "flex", "justify-content": "space-between" }}>
+              <span>当前部形腧穴</span>
+              <span>{regionalPoints().length} 穴</span>
+            </div>
+            <For each={regionalPoints()}>
+              {([pt, loc]) => {
+                const isSelected = selectedPoint()?.code === pt.code;
+                return (
+                  <div
+                    class={`${styles.pairListCard} ${isSelected ? styles.pairListCardActive : ""}`}
+                    onClick={() => setSelectedPoint(pt)}
+                  >
+                    <div class={styles.pairListTop}>
+                      <span class={styles.pairListName}>{pt.name}</span>
+                      <span class={styles.ptCode}>{pt.code}</span>
+                    </div>
+                    <div style={{ "font-size": "0.74rem", color: "var(--accent-cinnabar)", "margin-top": "0.2rem" }}>
+                      {pt.meridian_name} · {loc.region}
+                    </div>
+                    <div class={styles.tagChips} style={{ "margin-top": "0.3rem" }}>
+                      <For each={pt.specific_tags}>
+                        {(tag) => <span class={styles.tagChip}>{tag}</span>}
+                      </For>
+                    </div>
+                  </div>
+                );
+              }}
+            </For>
+          </Show>
         </div>
       </div>
 
       {/* 2. 中间展示区：经脉循行拓扑图解 OR 对穴深研 */}
-      <div class={styles.flowMapPane}>
+      <Show when={activeTab() !== "body"}>
+        <div class={styles.flowMapPane}>
         {/* 经络详情模式 */}
         <Show when={activeTab() === "meridians" && selectedMeridian()}>
           <div class={styles.mapHeader}>
@@ -673,6 +737,199 @@ export const MeridianPanel: Component<MeridianPanelProps> = (props) => {
           </div>
         </Show>
       </div>
+      </Show>
+
+      {/* 人体部形 2D 交互总图 */}
+      <Show when={activeTab() === "body"}>
+        <div class={styles.bodyMapPane}>
+          <div class={styles.bodyMapTopBar}>
+            <div class={styles.aspectToggleGroup}>
+              <button
+                type="button"
+                class={`${styles.aspectToggleBtn} ${bodyAspect() === "anterior" ? styles.aspectToggleBtnActive : ""}`}
+                onClick={() => {
+                  setBodyAspect("anterior");
+                  if (bodyRegion() === "back_waist") setBodyRegion("chest_abdomen");
+                  const reg = bodyRegion();
+                  loadRegionalPoints(reg === "all" ? undefined : reg, "anterior");
+                }}
+              >
+                正面 (Anterior)
+              </button>
+              <button
+                type="button"
+                class={`${styles.aspectToggleBtn} ${bodyAspect() === "posterior" ? styles.aspectToggleBtnActive : ""}`}
+                onClick={() => {
+                  setBodyAspect("posterior");
+                  if (bodyRegion() === "chest_abdomen") setBodyRegion("back_waist");
+                  const reg = bodyRegion();
+                  loadRegionalPoints(reg === "all" ? undefined : reg, "posterior");
+                }}
+              >
+                背面 (Posterior)
+              </button>
+            </div>
+
+            <div class={styles.regionPillsRow}>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "all" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("all");
+                  loadRegionalPoints(undefined, bodyAspect());
+                }}
+              >
+                全部部位 ({regionalPoints().length})
+              </button>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "head_neck" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("head_neck");
+                  loadRegionalPoints("head_neck", bodyAspect());
+                }}
+              >
+                头面项部
+              </button>
+              <Show when={bodyAspect() === "anterior"}>
+                <button
+                  type="button"
+                  class={`${styles.regionPillBtn} ${bodyRegion() === "chest_abdomen" ? styles.regionPillBtnActive : ""}`}
+                  onClick={() => {
+                    setBodyRegion("chest_abdomen");
+                    loadRegionalPoints("chest_abdomen", "anterior");
+                  }}
+                >
+                  胸腹部
+                </button>
+              </Show>
+              <Show when={bodyAspect() === "posterior"}>
+                <button
+                  type="button"
+                  class={`${styles.regionPillBtn} ${bodyRegion() === "back_waist" ? styles.regionPillBtnActive : ""}`}
+                  onClick={() => {
+                    setBodyRegion("back_waist");
+                    loadRegionalPoints("back_waist", "posterior");
+                  }}
+                >
+                  腰背部
+                </button>
+              </Show>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "upper_limb" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("upper_limb");
+                  loadRegionalPoints("upper_limb", bodyAspect());
+                }}
+              >
+                上肢部
+              </button>
+              <button
+                type="button"
+                class={`${styles.regionPillBtn} ${bodyRegion() === "lower_limb" ? styles.regionPillBtnActive : ""}`}
+                onClick={() => {
+                  setBodyRegion("lower_limb");
+                  loadRegionalPoints("lower_limb", bodyAspect());
+                }}
+              >
+                下肢部
+              </button>
+            </div>
+          </div>
+
+          <div class={styles.bodyCanvasWrapper}>
+            <svg class={styles.bodySvg} viewBox="0 0 500 850">
+              <defs>
+                <radialGradient id="bodySkin" cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stop-color="var(--bg-card)" stop-opacity="0.9" />
+                  <stop offset="100%" stop-color="var(--bg-subtle)" stop-opacity="0.7" />
+                </radialGradient>
+                <filter id="pointPulse" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              {/* 人体剪影底模 (Classical Anatomical Silhouette) */}
+              <g stroke="var(--border-default)" stroke-width="1.8" fill="url(#bodySkin)">
+                {/* 头部与项部 */}
+                <ellipse cx="250" cy="80" rx="42" ry="52" />
+                {/* 躯干与四肢 */}
+                <path d="M 232 128 L 232 152 Q 210 158 190 175 L 140 230 Q 130 242 125 270 L 110 370 Q 105 385 100 420 L 96 440 Q 94 450 102 452 Q 108 452 112 442 L 125 390 L 138 320 Q 148 260 168 220 L 195 200 L 195 380 Q 195 440 205 465 L 185 620 Q 180 700 182 780 L 175 805 Q 175 815 186 816 Q 198 816 200 802 L 210 740 L 220 620 L 240 485 L 250 480 L 260 485 L 280 620 L 290 740 L 300 802 Q 302 816 314 816 Q 325 815 325 805 L 318 780 Q 320 700 315 620 L 295 465 Q 305 440 305 380 L 305 200 L 332 220 Q 352 260 362 320 L 375 390 L 388 442 Q 392 452 398 452 Q 406 450 404 440 L 400 420 Q 395 385 390 370 L 375 270 Q 370 242 360 230 L 310 175 Q 290 158 268 152 L 268 128 Z" />
+              </g>
+
+              {/* 中轴经脉参考线：正面为任脉，背面为督脉与脊柱 */}
+              <line
+                x1="250"
+                y1={bodyAspect() === "anterior" ? "130" : "70"}
+                x2="250"
+                y2="475"
+                stroke="var(--accent-cinnabar)"
+                stroke-width="1.2"
+                stroke-dasharray="4 4"
+                stroke-opacity="0.6"
+              />
+              <text x="254" y="145" font-size="10" fill="var(--accent-cinnabar)" opacity="0.8">
+                {bodyAspect() === "anterior" ? "任脉中轴" : "督脉脊柱中轴"}
+              </text>
+
+              {/* 穴位矢量标定点 */}
+              <For each={regionalPoints()}>
+                {([pt, loc]) => {
+                  const cx = loc.coords[0] * 500;
+                  const cy = loc.coords[1] * 850;
+                  const isSelected = selectedPoint()?.code === pt.code;
+                  const isLeft = cx <= 250;
+
+                  return (
+                    <g
+                      class={`${styles.bodyPointGroup} ${isSelected ? styles.bodyPointActive : ""}`}
+                      onClick={() => setSelectedPoint(pt)}
+                    >
+                      <Show when={isSelected}>
+                        <circle
+                          cx={cx}
+                          cy={cy}
+                          r="14"
+                          fill="var(--accent-cinnabar)"
+                          fill-opacity="0.3"
+                          filter="url(#pointPulse)"
+                        />
+                      </Show>
+                      <circle
+                        cx={cx}
+                        cy={cy}
+                        r={isSelected ? "7" : "4.5"}
+                        fill={isSelected ? "var(--accent-cinnabar)" : "var(--bg-card)"}
+                        stroke="var(--accent-cinnabar)"
+                        stroke-width={isSelected ? "2.5" : "1.8"}
+                        class={styles.bodyPointCircle}
+                      />
+                      <text
+                        x={isLeft ? cx - 8 : cx + 8}
+                        y={cy + 3}
+                        text-anchor={isLeft ? "end" : "start"}
+                        class={styles.bodyPointLabel}
+                      >
+                        {pt.name}
+                      </text>
+                      <text
+                        x={isLeft ? cx - 8 : cx + 8}
+                        y={cy + 13}
+                        text-anchor={isLeft ? "end" : "start"}
+                        class={styles.bodyPointCode}
+                      >
+                        {pt.code}
+                      </text>
+                    </g>
+                  );
+                }}
+              </For>
+            </svg>
+          </div>
+        </div>
+      </Show>
 
       {/* 3. 右侧：选定穴位临床定位与名家辨析详解卡 */}
       <div class={styles.acupointDetailPane}>

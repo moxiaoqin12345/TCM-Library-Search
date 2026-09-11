@@ -72,12 +72,24 @@ const ThemeIcon = () => (
   </svg>
 );
 
+const GraphIcon = () => (
+  <svg class={styles.icon} viewBox="0 0 24 24">
+    <circle cx="6" cy="6" r="3" />
+    <circle cx="18" cy="6" r="3" />
+    <circle cx="12" cy="18" r="3" />
+    <line x1="8.5" y1="7.5" x2="15.5" y2="7.5" />
+    <line x1="7.5" y1="8.5" x2="10.5" y2="15.5" />
+    <line x1="16.5" y1="8.5" x2="13.5" y2="15.5" />
+  </svg>
+);
+
 export const NavRail: Component<NavRailProps> = (props) => {
   const topNavs: NavItem[] = [
     { id: 'home', label: '主页', icon: HomeIcon },
     { id: 'search', label: '检索', icon: SearchIcon },
     { id: 'library', label: '书库', icon: LibraryIcon },
     { id: 'meridian', label: '经穴', icon: MeridianIcon },
+    { id: 'graph', label: '图谱', icon: GraphIcon },
     { id: 'bookmark', label: '收藏', icon: BookmarkIcon },
   ];
 

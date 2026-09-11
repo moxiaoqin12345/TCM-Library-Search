@@ -58,7 +58,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IENDNzMzMjU2MUNCOEFGMDgKUldRSXI3Z2NWakp6ek8rc0FHUG9IVXdhdnkvQk1rdmhEVnVwYy9PTjdwSjBUWTJFeklrbzNqMVYK",
       "endpoints": [
-        "https://github.com/moxiaoqin12345/TCM-Library-Search/releases/latest/download/latest.json"
+        "https://github.com/Xiaoqin-Mo/TCM-Library-Search/releases/latest/download/latest.json"
       ]
     }
   }

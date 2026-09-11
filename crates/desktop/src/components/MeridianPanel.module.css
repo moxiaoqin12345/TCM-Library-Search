@@ -875,3 +875,137 @@
   color: var(--accent-cinnabar);
   background: rgba(184, 59, 38, 0.05);
 }
+
+/* ========================================================
+   4. 人体部形 2D/3D 交互穴位总图
+======================================================== */
+.bodyMapPane {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: var(--bg-surface);
+  border-right: 1px solid var(--border-subtle);
+  overflow: hidden;
+  position: relative;
+}
+
+.bodyMapTopBar {
+  padding: 0.65rem 1.25rem;
+  background: var(--bg-card);
+  border-bottom: 1px solid var(--border-subtle);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  z-index: 10;
+}
+
+.aspectToggleGroup {
+  display: flex;
+  background: var(--bg-subtle);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+  border: 1px solid var(--border-default);
+}
+
+.aspectToggleBtn {
+  border: none;
+  background: transparent;
+  padding: 0.35rem 0.85rem;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-radius: calc(var(--radius-sm) - 2px);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.aspectToggleBtnActive {
+  background: var(--accent-cinnabar);
+  color: #fff;
+  box-shadow: 0 1px 4px rgba(184, 59, 38, 0.3);
+}
+
+.regionPillsRow {
+  display: flex;
+  gap: 0.4rem;
+  overflow-x: auto;
+  scrollbar-width: none;
+}
+
+.regionPillBtn {
+  border: 1px solid var(--border-subtle);
+  background: var(--bg-surface);
+  color: var(--text-secondary);
+  font-size: 0.76rem;
+  padding: 0.3rem 0.65rem;
+  border-radius: 14px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition: all 0.15s ease;
+}
+
+.regionPillBtn:hover {
+  border-color: var(--border-focus);
+  color: var(--text-primary);
+}
+
+.regionPillBtnActive {
+  background: var(--bg-card);
+  border-color: var(--accent-cinnabar);
+  color: var(--accent-cinnabar);
+  font-weight: 600;
+}
+
+.bodyCanvasWrapper {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: auto;
+  position: relative;
+  padding: 1rem;
+  background: radial-gradient(circle at center, var(--bg-surface) 40%, var(--bg-subtle) 100%);
+}
+
+.bodySvg {
+  max-height: 100%;
+  width: auto;
+  max-width: 540px;
+  filter: drop-shadow(0 4px 16px rgba(0, 0, 0, 0.06));
+  user-select: none;
+}
+
+.bodyPointGroup {
+  cursor: pointer;
+  transition: transform 0.15s ease;
+}
+
+.bodyPointCircle {
+  transition: r 0.2s ease, fill 0.2s ease;
+}
+
+.bodyPointGroup:hover .bodyPointCircle {
+  r: 8;
+  filter: drop-shadow(0 0 6px rgba(184, 59, 38, 0.8));
+}
+
+.bodyPointActive .bodyPointCircle {
+  r: 9;
+  filter: drop-shadow(0 0 8px rgba(184, 59, 38, 1));
+}
+
+.bodyPointLabel {
+  font-size: 11px;
+  font-family: var(--font-kaiti, "KaiTi", "楷体", serif);
+  font-weight: 600;
+  fill: var(--text-primary);
+  pointer-events: none;
+}
+
+.bodyPointCode {
+  font-size: 9px;
+  fill: var(--text-muted);
+  pointer-events: none;
+}
+

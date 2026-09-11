@@ -10,7 +10,7 @@ version = "0.2.0"
 edition = "2021"
 authors = ["TCM-Library Contributors"]
 license = "MIT"
-repository = "https://github.com/moxiaoqin12345/TCM-Library-Search"
+repository = "https://github.com/Xiaoqin-Mo/TCM-Library-Search"
 
 [workspace.dependencies]
 serde = { version = "1.0", features = ["derive"] }
