@@ -4,8 +4,9 @@ use corpus::CorpusManager;
 use std::path::PathBuf;
 use tauri::{Manager, State};
 use tcm_library_core::{
-    check_herb_compatibility, diff_texts, find_acupoint, get_meridian_knowledge_base,
-    locate_manifest_path, recommend_acupoints_for_symptom, AcupointInfo, BookSummaryItem,
+    check_herb_compatibility, diff_texts, find_acupoint, get_canonical_acupoint_pairs,
+    get_meridian_knowledge_base, locate_manifest_path, recommend_acupoints_for_symptom,
+    recommend_pairs_for_symptom, AcupointInfo, AcupointPairFormula, BookSummaryItem,
     CategoryTreeItem, CompatibilityAlert, CorpusStatus, MeridianInfo, SearchQuery,
     SearchResultItem, TcmEntryDetail, TextDiffResult,
 };
@@ -156,6 +157,18 @@ fn recommend_acupoints(symptom: String) -> Vec<AcupointInfo> {
     recommend_acupoints_for_symptom(&symptom)
 }
 
+/// 获取经典对偶配穴处方知识库
+#[tauri::command]
+fn list_acupoint_pairs() -> Vec<AcupointPairFormula> {
+    get_canonical_acupoint_pairs()
+}
+
+/// 依据临床病症推荐经典对偶配穴处方
+#[tauri::command]
+fn recommend_acupoint_pairs(symptom: String) -> Vec<AcupointPairFormula> {
+    recommend_pairs_for_symptom(&symptom)
+}
+
 fn resolve_corpus_dir(app: &tauri::App) -> PathBuf {
     // 1. 尝试从应用资源目录检索
     if let Ok(resource_dir) = app.path().resource_dir() {
@@ -226,6 +239,8 @@ pub fn run() {
             list_meridians,
             get_acupoint_detail,
             recommend_acupoints,
+            list_acupoint_pairs,
+            recommend_acupoint_pairs,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");

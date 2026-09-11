@@ -284,3 +284,31 @@ export async function recommendAcupoints(
 ): Promise<AcupointInfo[]> {
   return invoke("recommend_acupoints", { symptom });
 }
+
+export type PairPrinciple =
+  | "yuan_luo"
+  | "shu_mu"
+  | "ba_mai_jiao_hui"
+  | "biao_li"
+  | "tong_ming"
+  | "ju_bu_yuan_duan";
+
+export interface AcupointPairFormula {
+  name: string;
+  principle: PairPrinciple;
+  points: string[];
+  efficacy: string;
+  mechanism: string;
+  indications: string[];
+  origin_classic: string;
+}
+
+export async function listAcupointPairs(): Promise<AcupointPairFormula[]> {
+  return invoke("list_acupoint_pairs");
+}
+
+export async function recommendAcupointPairs(
+  symptom: string
+): Promise<AcupointPairFormula[]> {
+  return invoke("recommend_acupoint_pairs", { symptom });
+}
